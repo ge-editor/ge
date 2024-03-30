@@ -8,7 +8,6 @@
 - Easy-to-use interface
 - Basic text editing functionalities
 - Customizable themes
-- Syntax highlighting (planned feature)
 
 ## Goals
 
@@ -45,10 +44,6 @@ theme package:
 - Color definitions
 - Mark character definitions
 
-Future packages (planned):
-
-- Mail client view (TreeLeaf interface)
-
 **Near-Term Goals:**
 - Functionality and code optimization
 - Bug resolution
@@ -73,7 +68,7 @@ $ make
 After installing ge, you can start it by running the ge command in your terminal.
 
 ```bash
-./ge \<text file\>
+./ge <text file>
 ```
 
 ## Contributing
