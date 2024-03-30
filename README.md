@@ -60,7 +60,12 @@ This text editor project is inspired by Godit (https://github.com/nsf/godit).
 To install ge, you need to have Go installed on your system. Then, you can use the following command:
 
 ```bash
-go get github.com/your-username/ge
+$ mkdir ge-tmp
+$ cd ge-tmp/
+$ git clone git@github.com:ge-editor/ge.git ge
+$ cd ge
+$ go get -u
+$ make
 ```
 
 ## Usage
@@ -68,7 +73,7 @@ go get github.com/your-username/ge
 After installing ge, you can start it by running the ge command in your terminal.
 
 ```bash
-ge
+./ge \<text file\>
 ```
 
 ## Contributing
