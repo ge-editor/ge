@@ -37,6 +37,12 @@ type popupStruct struct {
 	*screen.Screen
 }
 
+func (pp *popupStruct) WillEnterMode() {
+}
+
+func (pp *popupStruct) WillExitMode() {
+}
+
 func (pp *popupStruct) Draw() {
 	pp.minibuffer.Draw()
 

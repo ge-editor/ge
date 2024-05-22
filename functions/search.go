@@ -49,6 +49,14 @@ type searchStruct struct {
 	replaceWord   string
 }
 
+func (sr *searchStruct) WillEnterMode() {
+	sr.showPopupmenu = false
+}
+
+func (sr *searchStruct) WillExitMode() {
+	sr.showPopupmenu = false
+}
+
 func (sr *searchStruct) Draw() {
 	sr.minibuffer.Draw()
 	if sr.popupmenu == nil {
@@ -66,8 +74,10 @@ func (sr *searchStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 	switch eKey.Key() {
 	case tcell.KeyEscape:
 		sr.showPopupmenu = false
-	case tcell.KeyEnter: // move next
-		if sr.showPopupmenu {
+	case tcell.KeyEnter:
+		if !sr.showPopupmenu {
+			break
+		}
 			index, s := sr.popupmenu.Item()
 			if index >= 0 {
 				sr.histories = utils.MoveElement(sr.histories, index, true)
@@ -75,10 +85,7 @@ func (sr *searchStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 				str = s
 				sr.minibuffer.Set(str, len(str))
 				sr.search()
-				break
 			}
-		}
-		fallthrough
 	case tcell.KeyCtrlS: // move next
 		sr.histories = utils.AppendIfNotExists(sr.histories, str, true)
 		editor.MoveNextFoundWord()
@@ -94,6 +101,9 @@ func (sr *searchStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 		// editor.Draw()
 	case tcell.KeyCtrlUnderscore: // tcell.KeyCtrlSlash: // undo
 		// not implemented
+		editor.Undo()
+		sr.search()
+		editor.MoveNextFoundWord()
 	case tcell.KeyCtrlA: // replace all
 		// If the lines are different, currently it is not possible to undo all at once
 		// Need to change undo/redo mechanism

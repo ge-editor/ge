@@ -258,32 +258,32 @@ func init() {
 	// tcell.KeyCtrlSlash:
 	// eventKey3.Bind([]string{"Ctrl+X", "Ctrl+/"}, func() {
 	eventKeyEditor.Bind([]string{"Ctrl+X", "Ctrl+_"}, func() {
-		if editor.Redo.IsEmpty() {
+		if editor.RedoAction.IsEmpty() {
 			s.Echo("Redo buffer is empty")
 			return
 		}
-		editor.VC_Redo()
+		editor.Redo()
 		eventKey.SetExtendedFunction(newRedo(editor))
 	})
 	// tcell.KeyCtrlUnderscore:
 	// tcell.KeyCtrlSlash:
 	eventKeyEditor.Bind([]string{"Ctrl+_"}, func() {
-		editor.VC_Undo()
+		editor.Undo()
 	})
 
 	eventKeyEditor.Bind([]string{"End"}, func() {
-		editor.MoveCursorEndOfLine()
+		editor.MoveCursorEndOfLogicalLine()
 	})
 	eventKeyEditor.Bind([]string{"Ctrl+E"}, func() {
-		editor.MoveCursorEndOfLogicalLine()
+		editor.MoveCursorEndOfLine()
 	})
 
 	eventKeyEditor.Bind([]string{"Home"}, func() {
-		editor.MoveCursorBeginningOfLine()
+		editor.MoveCursorBeginningOfLogicalLine()
 	})
 	// mac delete-key is this
 	eventKeyEditor.Bind([]string{"Ctrl+A"}, func() {
-		editor.MoveCursorBeginningOfLogicalLine()
+		editor.MoveCursorBeginningOfLine()
 	})
 
 	eventKey2.Bind([]string{"Escape", "<"}, func() {

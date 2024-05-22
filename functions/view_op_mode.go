@@ -22,6 +22,12 @@ type view_op_mode struct {
 	*gecore.KeyPointer
 }
 
+func (e view_op_mode) WillEnterMode() {
+}
+
+func (e view_op_mode) WillExitMode() {
+}
+
 func (e view_op_mode) Draw() {
 	s := screen.Get()
 	s.PrintEcho("view operations mode")

@@ -41,6 +41,12 @@ type modeMark struct {
 	*screen.Screen
 }
 
+func (m *modeMark) WillEnterMode() {
+}
+
+func (m *modeMark) WillExitMode() {
+}
+
 func (m *modeMark) Draw() {
 	m.minibuffer.Draw()
 	if m.popupmenu == nil {

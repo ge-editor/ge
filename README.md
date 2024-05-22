@@ -133,15 +133,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | ~~M-b, Shift-<right>~~             | ~~Move cursor one word backward~~
 | C-n, \<down>        | Move cursor to the next line
 | C-p, \<up>          | Move cursor to the previous line
-| C-e, \<end>         | Move cursor to the end of line
-| C-a, \<home>        | Move cursor to the beginning of the line
+| C-e                 | Move cursor to the end of line
+| \<end>              | Move cursor to the end of logical line
+| C-a                 | Move cursor to the beginning of the line
+| \<home>             | Move cursor to the beginning of the logical line
 | C-v, \<pgdn>        | Move view forward (half of the screen)
 | M-v, \<pgup>        | Move view backward (half of the screen)
 | ESC \>              | Move cursor to the end of file
 | ESC \<              | Move cursor to the beginning of the file
 | ~~C-l~~             | ~~Center view on line containing cursor~~
-| C-s                 | Search & replace forward [interactive prompt]
-| C-r                 | Search & replace backward [interactive prompt]
 | ~~C-j~~             | ~~Insert a newline character and autoindent~~
 | C-\                 | Insert a newline character
 | C-m, \<enter>       | Insert a newline character and autoindent
@@ -153,7 +153,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | ~~M-u~~             | ~~Convert the following word to upper case~~
 | ~~M-l~~             | ~~Convert the following word to lower case~~
 | ~~M-c~~             | ~~Capitalize the following word~~
-| ~~\<any other key~~ | ~~Insert character~~
+| \<any other key>    | Insert character
+
+### Search and replace operations:
+|  key                |  function                             |
+|---------------------|---------------------------------------|
+| C-s, C-r            | Into Search and replace mode [interactive prompt]
+| ~~C-r~~             | ~~Search and replace backward, into search and replace mode [interactive prompt]~~
+| C-s                 | Move to forward matched word
+| C-r                 | Move to backward matched word
+| C-e                 | Replace on cursor
+| ~~C-a~~             | ~~Replace All~~
+| C-y                 | Yank and replace on minibuffer from kill buffer
+| ~~C-/~~             | ~~Undo~~
 
 ### Mark and region operations:
 |  key                |  function                             |

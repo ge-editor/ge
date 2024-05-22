@@ -21,6 +21,12 @@ type minibufferStruct struct {
 	callback func(string)
 }
 
+func (m *minibufferStruct) WillEnterMode() {
+}
+
+func (m *minibufferStruct) WillExitMode() {
+}
+
 func (m *minibufferStruct) Event(tev *tcell.EventKey) *tcell.EventKey {
 	m.MiniBuffer.Event(tev)
 	switch tev.Key() {

@@ -26,6 +26,12 @@ type quitFunction struct {
 	quit   chan struct{}
 }
 
+func (q *quitFunction) WillEnterMode() {
+}
+
+func (q *quitFunction) WillExitMode() {
+}
+
 func (q *quitFunction) Draw() {
 	q.PrintEcho("Modified buffers exist; exit anyway? (y or n): " + string(q.answer))
 }
@@ -59,14 +65,20 @@ type redoFunction struct {
 	*te.Editor
 }
 
+func (r *redoFunction) WillEnterMode() {
+}
+
+func (r *redoFunction) WillExitMode() {
+}
+
 func (r *redoFunction) Draw() {
 	r.PrintEcho()
 }
 
 func (r *redoFunction) Event(tev *tcell.EventKey) *tcell.EventKey {
 	if tev.Key() == tcell.KeyCtrlUnderscore {
-		r.VC_Redo()
-		if r.Redo.IsEmpty() {
+		r.Redo()
+		if r.RedoAction.IsEmpty() {
 			r.Echo("No further redo information")
 		} else {
 			r.Echo("Redo!")

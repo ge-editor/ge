@@ -36,6 +36,12 @@ type findFileStruct struct {
 	*screen.Screen
 }
 
+func (ff *findFileStruct) WillEnterMode() {
+}
+
+func (ff *findFileStruct) WillExitMode() {
+}
+
 func (ff *findFileStruct) Draw() {
 	ff.minibuffer.Draw()
 	if ff.popupmenu == nil {

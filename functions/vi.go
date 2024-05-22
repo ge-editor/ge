@@ -23,6 +23,12 @@ type vi struct {
 	*screen.Screen
 }
 
+func (e *vi) WillEnterMode() {
+}
+
+func (e *vi) WillExitMode() {
+}
+
 func (e *vi) Event(tev *tcell.EventKey) *tcell.EventKey {
 	switch tev.Rune() {
 	case 'j':

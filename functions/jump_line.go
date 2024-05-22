@@ -46,6 +46,12 @@ type MinibufferStruct struct {
 	*gecore.KeyPointer
 }
 
+func (m *MinibufferStruct) WillEnterMode() {
+}
+
+func (m *MinibufferStruct) WillExitMode() {
+}
+
 func (m *MinibufferStruct) Event(tev *tcell.EventKey) *tcell.EventKey {
 	m.MiniBuffer.Event(tev)
 	return m.event(tev)
