@@ -128,9 +128,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 |  key                |  function                             |
 |---------------------|---------------------------------------|
 | C-f, \<right>       | Move cursor one character forward
-| ~~M-f, Shift-<left>~~             | ~~Move cursor one word forward~~
+| Shift-\<left>       | Move cursor one word backward
 | C-b, \<left>        | Move cursor one character backward
-| ~~M-b, Shift-<right>~~             | ~~Move cursor one word backward~~
+| Shift-\<right>      | Move cursor one word forward
 | C-n, \<down>        | Move cursor to the next line
 | C-p, \<up>          | Move cursor to the previous line
 | C-e                 | Move cursor to the end of line
@@ -143,7 +143,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | ESC \<              | Move cursor to the beginning of the file
 | ~~C-l~~             | ~~Center view on line containing cursor~~
 | ~~C-j~~             | ~~Insert a newline character and autoindent~~
-| C-\                 | Insert a newline character
+| C-j                 | Insert a newline character
 | C-m, \<enter>       | Insert a newline character and autoindent
 | C-h, \<backspace>   | Delete one character backwards
 | C-d, \<delete>      | Delete one character in-place
@@ -187,6 +187,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Advanced:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
+| [F2]                | ~~Refactaring~~
+| [F4]                | ~~case...~~
 | ~~M-/~~             | ~~Local words autocompletion~~
 | ~~C-x C-a~~         | ~~Invoke buffer specific autocompletion menu [menu]~~
 | C-x (               | Start keyboard macro recording
@@ -196,5 +198,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | C-x I               | Insert date
 | ~~C-x !~~           | ~~Filter region through an external command [prompt]~~
 | C-z                 | Suspend
+
+### Reserved:
+|  key                |  function                             |
+|---------------------|---------------------------------------|
+| Ctrl-j              |
 
 ---

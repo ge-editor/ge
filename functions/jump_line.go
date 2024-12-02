@@ -17,7 +17,7 @@ import (
 func newJumpLine(e *te.Editor) *gecore.ExtendedFunctionInterface {
 	mb := &MinibufferStruct{
 		editor:     e,
-		MiniBuffer: gecore.NewMiniBuffer("", fmt.Sprintf("Goto line (1-%d): ", e.LenRows()), false),
+		MiniBuffer: gecore.NewMiniBuffer("", fmt.Sprintf("Goto line (1-%d): ", e.Rows().RowLength()), false),
 		event: func(tev *tcell.EventKey) *tcell.EventKey {
 			switch tev.Key() {
 			case tcell.KeyEnter:

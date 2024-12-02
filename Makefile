@@ -56,6 +56,12 @@ BUILD_TAGS ?= -tags debug
 # Environment variables
 # export CGO_ENABLED=1
 
+# Gitのコミットハッシュの取得
+GIT_COMMIT := $(shell git rev-parse HEAD 2>/dev/null || echo "not present")
+
+# ビルド日時の取得
+BUILD_TIME := $(shell date +%Y-%m-%d\ %H:%M:%S)
+
 # Setting build flags based on target
 ifeq ($(OS), windows)
     # Build flags for Windows
@@ -86,11 +92,12 @@ else
 endif
 
 ifeq ($(TAG), release)
-	BUILD_OPTIONS = -ldflags "-s -w" -trimpath -a
+	BUILD_OPTIONS = -ldflags "-s -w -X 'main.buildTime=$(BUILD_TIME)' -X 'main.gitCommit=$(GIT_COMMIT)'" -trimpath -a
     BUILD_TAGS += -tags release
 else ifeq ($(TAG), develop)
     BUILD_TAGS += -tags develop
 else ifeq ($(TAG), debug)
+	BUILD_OPTIONS = -ldflags "-X 'main.buildTime=$(BUILD_TIME)' -X 'main.gitCommit=$(GIT_COMMIT)'"
     BUILD_TAGS += -tags debug
 else
     $(error "Invalid TAG specified. Use TAG=[release|develop|debug]")

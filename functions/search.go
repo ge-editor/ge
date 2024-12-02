@@ -10,8 +10,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/ge-editor/gecore"
-	"github.com/ge-editor/gecore/kill_buffer"
-	"github.com/ge-editor/gecore/screen"
+	"github.com/ge-editor/gecore/verb"
 
 	"github.com/ge-editor/utils"
 )
@@ -21,19 +20,19 @@ var search *gecore.ExtendedFunctionInterface
 func init() {
 	// verb.PP("x,y %d,%d", gScreen.CX, gScreen.CY)
 	sr := &searchStruct{
-		minibuffer: gecore.NewMiniBuffer("[/iE/]Search[/Replace/]", "Search: ", false),
-		Screen:     screen.Get(),
-		histories:  []string{},
+		MiniBufferPopupmenu: gecore.NewMiniBufferPopupmenu("[/iE/]Search[/Replace/]", "Search: ", false),
+		//Screen:              screen.Get(),
+		//histories:           []string{},
 	}
 	a := (gecore.ExtendedFunctionInterface)(sr)
 	search = &a
 }
 
 type searchStruct struct {
-	minibuffer    *gecore.MiniBuffer
-	popupmenu     *gecore.Popupmenu
-	showPopupmenu bool
-	*screen.Screen
+	*gecore.MiniBufferPopupmenu
+	//popupmenu           *gecore.Popupmenu
+	//showPopupmenu       bool
+	//*screen.Screen
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -50,105 +49,112 @@ type searchStruct struct {
 }
 
 func (sr *searchStruct) WillEnterMode() {
-	sr.showPopupmenu = false
+	sr.ShowPopupmenu(false)
 }
 
 func (sr *searchStruct) WillExitMode() {
-	sr.showPopupmenu = false
+	sr.ShowPopupmenu(false)
 }
 
 func (sr *searchStruct) Draw() {
-	sr.minibuffer.Draw()
-	if sr.popupmenu == nil {
-		// The position where the Popup menu is displayed is based on the minibuffer cursor position.
-		sr.popupmenu = gecore.NewPopupmenu(utils.Rect{X: sr.CX, Y: sr.CY, Width: 32, Height: 10}, sr.histories, 0)
-	}
-	if sr.showPopupmenu {
-		sr.popupmenu.Draw()
-	}
+	sr.MiniBufferPopupmenu.Draw()
 }
 
 func (sr *searchStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
-	str := string(sr.minibuffer.String())
+	sr.MiniBufferPopupmenu.Event(eKey)
+
+	str := string(sr.String())
+	// verb.PP("searchStruct Event %v", str)
 
 	switch eKey.Key() {
-	case tcell.KeyEscape:
-		sr.showPopupmenu = false
+	/* 	case tcell.KeyEscape:
+	sr.showPopupmenu = false
+	*/
 	case tcell.KeyEnter:
-		if !sr.showPopupmenu {
-			break
+		/* 		if !sr.showPopupmenu {
+		   			break
+		   		}
+		*/
+		// index, s := sr.popupmenu.Item()
+		index, s := sr.MiniBufferPopupmenu.Item()
+		if index >= 0 {
+			sr.histories = utils.MoveElement(sr.histories, index, true)
+			sr.Popupmenu.Set(sr.histories, 0)
+			str = s
+			sr.MiniBuffer.Set(str, len(str))
+			sr.search()
 		}
-			index, s := sr.popupmenu.Item()
-			if index >= 0 {
-				sr.histories = utils.MoveElement(sr.histories, index, true)
-				sr.popupmenu.Set(sr.histories, 0)
-				str = s
-				sr.minibuffer.Set(str, len(str))
-				sr.search()
-			}
 	case tcell.KeyCtrlS: // move next
 		sr.histories = utils.AppendIfNotExists(sr.histories, str, true)
 		editor.MoveNextFoundWord()
 	case tcell.KeyCtrlR: // move prev
 		sr.histories = utils.AppendIfNotExists(sr.histories, str, true)
 		editor.MovePrevFoundWord()
-	case tcell.KeyCtrlE: // replace a on cursor
+		/* 	case tcell.KeyCtrlE: // replace a on cursor
 		if !sr.isReplace {
 			break
 		}
 		editor.ReplaceCurrentSearchString(sr.replaceWord)
 		// sr.search()
 		// editor.Draw()
+		*/
 	case tcell.KeyCtrlUnderscore: // tcell.KeyCtrlSlash: // undo
 		// not implemented
 		editor.Undo()
 		sr.search()
 		editor.MoveNextFoundWord()
-	case tcell.KeyCtrlA: // replace all
-		// If the lines are different, currently it is not possible to undo all at once
-		// Need to change undo/redo mechanism
-		if !sr.isReplace {
-			break
-		}
-	case tcell.KeyCtrlY:
-		// Yank from kill buffer
-		s := string(kill_buffer.KillBuffer.GetLast())
-		sr.minibuffer.Set(s, len(s))
-		sr.parseMiniBuffer(s)
-		sr.search()
-	case tcell.KeyTAB: // Popup search history
-		sr.showPopupmenu = !sr.showPopupmenu
-		if sr.showPopupmenu {
-			sr.setBeFilteredHistoriesToPopupMenu(str)
-		}
-	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
-		if sr.showPopupmenu {
-			sr.popupmenu.Event(eKey)
-		} else {
-			sr.minibuffer.Event(eKey)
-		}
+		/* 	case tcell.KeyCtrlA: // replace all
+		   		// If the lines are different, currently it is not possible to undo all at once
+		   		// Need to change undo/redo mechanism
+		   		if !sr.isReplace {
+		   			break
+		   		}
+		   	case tcell.KeyCtrlY:
+		   		// Yank from kill buffer
+		   		s := string(kill_buffer.KillBuffer.GetLast())
+		   		sr.minibufferPopupmenu.Set(s, len(s))
+		   		sr.parseMiniBuffer(s)
+		   		verb.PP("parseMiniBuffer %v", sr)
+		   		sr.search()
+		   	case tcell.KeyTAB: // Popup search history
+		   		sr.showPopupmenu = !sr.showPopupmenu
+		   		if sr.showPopupmenu {
+		   			sr.setBeFilteredHistoriesToPopupMenu(str)
+		   		}
+		   	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
+		   		if sr.showPopupmenu {
+		   			sr.popupmenu.Event(eKey)
+		   		} else {
+		   			sr.minibufferPopupmenu.Event(eKey)
+		   		}
+		*/
 	default:
-		sr.minibuffer.Event(eKey)
-		str = string(sr.minibuffer.String())
-		if str == "" {
-			break
-		}
-		sr.setBeFilteredHistoriesToPopupMenu(str)
+		/* 		sr.minibufferPopupmenu.Event(eKey)
+		   		str = string(sr.minibufferPopupmenu.String())
+		   		if str == "" {
+		   			break
+		   		}
+		   		sr.setBeFilteredHistoriesToPopupMenu(str)
+		   		sr.parseMiniBuffer(str)
+		   		// verb.PP("parseMiniBuffer %v", sr)
+		*/
 		sr.parseMiniBuffer(str)
 		sr.search()
 	}
 	return eKey
 }
 
-func (sr *searchStruct) setBeFilteredHistoriesToPopupMenu(str string) {
-	items := []string{}
-	for _, h := range sr.histories {
-		if utils.ContainsAllCharacters(h, str) {
-			items = append(items, h)
+/*
+	 func (sr *searchStruct) setBeFilteredHistoriesToPopupMenu(str string) {
+		items := []string{}
+		for _, h := range sr.histories {
+			if utils.ContainsAllCharacters(h, str) {
+				items = append(items, h)
+			}
 		}
+		sr.popupmenu.Set(items, 0)
 	}
-	sr.popupmenu.Set(items, 0)
-}
+*/
 
 func (sr *searchStruct) search() {
 	if sr.cancel != nil {
@@ -158,6 +164,7 @@ func (sr *searchStruct) search() {
 
 	sr.ctx, sr.cancel = context.WithCancel(context.Background())
 	sr.wg.Add(1)
+	verb.PP("search %v", sr)
 	go func() {
 		editor.SearchText(sr.searchWord, sr.caseSensitive, sr.isRegexp, sr.ctx, &sr.wg)
 	}()

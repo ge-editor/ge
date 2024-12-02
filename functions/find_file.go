@@ -8,7 +8,6 @@ import (
 	"github.com/ge-editor/ge/define"
 
 	"github.com/ge-editor/gecore"
-	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
 
 	"github.com/ge-editor/utils"
@@ -19,21 +18,23 @@ import (
 // Equivalent of "C-x C-f" in Emacs.
 func newFindFile() *gecore.ExtendedFunctionInterface {
 	ff := &findFileStruct{
-		matches:    []string{},
-		minibuffer: gecore.NewMiniBuffer("", "Find file: ", false),
-		Screen:     screen.Get(),
+		matches:             []string{},
+		MiniBufferPopupmenu: gecore.NewMiniBufferPopupmenu("", "Find file: ", false),
+		// Screen:              screen.Get(),
 	}
 	a := (gecore.ExtendedFunctionInterface)(ff)
 	return &a
 }
 
 type findFileStruct struct {
-	matches            []string
-	minibuffer         *gecore.MiniBuffer
-	popupmenu          *gecore.Popupmenu
-	showPopupmenu      bool
+	matches []string
+	// MinibufferPopupmenu *gecore.MiniBuffer
+	//popupmenu          *gecore.Popupmenu
+	*gecore.MiniBufferPopupmenu
+
+	// showPopupmenu      bool
 	baseWithoutSymbols string
-	*screen.Screen
+	//*screen.Screen
 }
 
 func (ff *findFileStruct) WillEnterMode() {
@@ -43,26 +44,30 @@ func (ff *findFileStruct) WillExitMode() {
 }
 
 func (ff *findFileStruct) Draw() {
-	ff.minibuffer.Draw()
-	if ff.popupmenu == nil {
-		// The position where the Popup menu is displayed is based on the minibuffer cursor position.
-		ff.popupmenu = gecore.NewPopupmenu(utils.Rect{X: ff.CX, Y: ff.CY, Width: 32, Height: 10}, ff.matches, 0)
-	}
-	if ff.showPopupmenu {
-		ff.popupmenu.Draw()
-	}
+	ff.MiniBufferPopupmenu.Draw()
+
+	/*
+		 	if ff.popupmenu == nil {
+				// The position where the Popup menu is displayed is based on the minibuffer cursor position.
+				ff.popupmenu = gecore.NewPopupmenu(utils.Rect{X: ff.CX, Y: ff.CY, Width: 32, Height: 10}, ff.matches, 0)
+			}
+			if ff.showPopupmenu {
+				ff.popupmenu.Draw()
+			}
+	*/
 }
 
 func (ff *findFileStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
+	ff.MiniBufferPopupmenu.Event(eKey)
+
 	switch eKey.Key() {
 	case tcell.KeyEnter:
-		if ff.showPopupmenu {
-			_, s := ff.popupmenu.Item()
-			ff.minibuffer.Set(s, len(s))
-			ff.showPopupmenu = false
+		if ff.IsShowPopupmenu() {
+			ff.ShowPopupmenu(false)
 			return eKey
+			// break
 		}
-		filePath := string(ff.minibuffer.String())
+		filePath := string(ff.MiniBufferPopupmenu.String())
 		err := (*tree.ActiveTreeGet().GetLeaf()).(*te.Editor).OpenFile(filePath)
 		eventKey.Reset()
 		if err != nil {
@@ -72,23 +77,24 @@ func (ff *findFileStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 		}
 		return eKey
 	case tcell.KeyTAB:
-		str := string(ff.minibuffer.String())
+		str := string(ff.MiniBufferPopupmenu.String())
 		if str == "" {
 			str = "." + string(filepath.Separator)
 		}
-		ff.minibuffer.Set(str, len(str))
+		ff.MiniBuffer.Set(str, len(str))
 		ff.dirwalk(str)
-		ff.popupmenu.Set(ff.matches, 0)
-		ff.showPopupmenu = true
-	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
-		if ff.showPopupmenu {
-			ff.popupmenu.Event(eKey)
-		} else {
-			ff.minibuffer.Event(eKey)
-		}
+		ff.Popupmenu.Set(ff.matches, 0)
+		ff.ShowPopupmenu(true)
+	/* 	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
+	if ff.showPopupmenu {
+		ff.popupmenu.Event(eKey)
+	} else {
+		ff.MinibufferPopupmenu.Event(eKey)
+	}
+	*/
 	default:
-		ff.minibuffer.Event(eKey)
-		baseWithoutSymbols := utils.RemoveSymbols(filepath.Base(string(ff.minibuffer.String())))
+		// ff.MiniBufferPopupmenu.Event(eKey)
+		baseWithoutSymbols := utils.RemoveSymbols(filepath.Base(string(ff.String())))
 		if ff.baseWithoutSymbols == baseWithoutSymbols {
 			return eKey
 		}
@@ -100,10 +106,10 @@ func (ff *findFileStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 			}
 		}
 		if len(items) > 0 {
-			ff.popupmenu.Set(items, 0)
-			ff.showPopupmenu = true
+			ff.Popupmenu.Set(items, 0)
+			ff.ShowPopupmenu(true)
 		} else {
-			ff.showPopupmenu = false
+			ff.ShowPopupmenu(false)
 		}
 	}
 	return eKey

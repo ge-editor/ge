@@ -2,6 +2,7 @@ package functions
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -10,7 +11,6 @@ import (
 	"github.com/ge-editor/gecore/define"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
-	"github.com/ge-editor/gecore/verb"
 
 	"github.com/ge-editor/te"
 )
@@ -79,40 +79,8 @@ func init() {
 func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 	s := screen.Get()
 
-	/*
-		// Verify that the result of cbind.Decode is the same as tcell.EventKey
-		s1, err := cbind.Encode(eKey.Modifiers(), eKey.Key(), eKey.Rune())
-		if err != nil {
-			s.Echo(fmt.Sprintf("s1 %v", err))
-			return eKey
-		}
-		// k1 := gecore.MakeKey(eKey.Modifiers(), eKey.Key(), eKey.Rune())
-		// m1, k1, c1, err1 := cbind.Decode(s1)
-		m, k, c, err := gecore.Decode(s1)
-		if err != nil {
-			s.Echo(fmt.Sprintf("cbind.Decode %v", err))
-			// return eKey
-		}
-		s2, err := cbind.Encode(m, k, c)
-		if err != nil {
-			s.Echo(fmt.Sprintf("cbind.Encode %v", err))
-			return eKey
-		}
-		// k2 := gecore.MakeKey(m, k, c)
-		// s.Echo(fmt.Sprintf("cbind->MakeKey %q %v %v %v, %q %v %v %v", s1, eKey.Modifiers(), eKey.Key(), eKey.Rune(), s2, m, k, c))
-		verb.PP("cbind->MakeKey %q %v %v %v, %q %v %v %v", s1, eKey.Modifiers(), eKey.Key(), eKey.Rune(), s2, m, k, c)
-	*/
-
-	/*
-		if k1 != k2 {
-			return eKey
-		}
-	*/
-
 	err := eventKey.Execute(eKey, true)
-	if err != nil {
-		verb.PP("err %#v", err)
-	}
+
 	if err == errQuit {
 		// Here, only editor is checked, but
 		// It is necessary to change it so that it is checked in all views.
@@ -122,16 +90,15 @@ func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 		eventKey.SetExtendedFunction(newQuit(quit))
 		return eKey
 	}
-	/*
-		if err == gecore.ErrCodeAction {
-			return eKey
-		}
-	*/
 
-	/* 	if eventKey.IsExtendedFunctionValid() {
-	   		return eKey
-	   	}
-	*/
+	// Should be to continue next key bindings?
+	if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
+		eventKey.Reset()
+		return eKey
+	}
+
+	err = eventKey2.Execute(eKey, false)
+	// verb.PP("^Execute 2 %v", err)
 
 	if err == gecore.ErrCodeKeyBound {
 		switch eKey.Key() {
@@ -139,41 +106,11 @@ func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 			s.Echo("C-x")
 		case tcell.KeyEsc:
 			s.Echo("ESC-")
+		default:
+			s.Echo(fmt.Sprintf("echo key: %v", eKey.Key()))
 		}
 		// return eKey
 	}
-
-	/*
-		if err == gecore.ErrCodeAction {
-			verb.PP("^Action")
-			return eKey
-		}
-	*/
-
-	// Should be to continue next key bindings?
-	if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
-		eventKey.Reset()
-		return eKey
-	}
-	/*
-			if err == gecore.ErrCodeExtendedFunction {
-		   		return eKey
-		   	}
-	*/
-	err = eventKey2.Execute(eKey, false)
-	// verb.PP("^Execute 2 %v", err)
-
-	/*
-		if err == gecore.ErrCodeKeyBound {
-			switch eKey.Key() {
-			case tcell.KeyCtrlX:
-				s.Echo("C-x")
-			case tcell.KeyEsc:
-				s.Echo("ESC-")
-			}
-			// return eKey
-		}
-	*/
 
 	// if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
 	if err == gecore.ErrCodeExtendedFunction {
@@ -293,13 +230,6 @@ func init() {
 		editor.MoveCursorEndOfFile()
 	})
 
-	eventKey2.Bind([]string{"Shift+Left"}, func() {
-		editor.MoveCursorEndOfFile()
-	})
-	eventKey2.Bind([]string{"Shift+Right"}, func() {
-		editor.MoveCursorEndOfFile()
-	})
-
 	eventKeyEditor.Bind([]string{"Ctrl+V"}, func() {
 		editor.MoveViewHalfForward()
 	})
@@ -322,7 +252,7 @@ func init() {
 	*/
 
 	eventKeyEditor.Bind([]string{"Ctrl+W"}, func() {
-		editor.Kill_region()
+		editor.KillRegion()
 	})
 	eventKeyEditor.Bind([]string{"Ctrl+Y"}, func() {
 		editor.Yank()
@@ -382,6 +312,13 @@ func init() {
 		editor.MoveCursorBackward()
 	})
 
+	eventKeyEditor.Bind([]string{"Shift+Right"}, func() {
+		editor.MoveCursorNextWord()
+	})
+	eventKeyEditor.Bind([]string{"Shift+Left"}, func() {
+		editor.MoveCursorPreviousWord()
+	})
+
 	eventKeyEditor.Bind([]string{"Ctrl+N"}, func() {
 		editor.MoveCursorNextLine()
 	})
@@ -402,17 +339,17 @@ func init() {
 		editor.Autoindent()
 	})
 	// Still not working properly
-	eventKeyEditor.Bind([]string{"Ctrl+\\"}, func() {
+	// eventKeyEditor.Bind([]string{"Ctrl+\\"}, func() {
+	eventKeyEditor.Bind([]string{"Ctrl+J"}, func() {
 		// editor.OnVCommand(te.VCommand_insert_rune, '\n')
+		editor.Autoindent()
 		editor.InsertRune('\n')
 	})
 
 	// Backspace
-	/*
-		eventKey3.Bind([]string{"Ctrl+H"}, func() {
-			e.OnVCommand(te.VCommand_delete_rune_backward, 0)
-		})
-	*/
+	eventKeyEditor.Bind([]string{"Ctrl+H"}, func() {
+		editor.DeleteRuneBackward()
+	})
 	eventKeyEditor.Bind([]string{"Backspace"}, func() {
 		editor.DeleteRuneBackward()
 	})

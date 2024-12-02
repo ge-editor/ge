@@ -7,7 +7,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/ge-editor/gecore"
-	"github.com/ge-editor/gecore/screen"
 
 	"github.com/ge-editor/utils"
 
@@ -21,24 +20,24 @@ func newModeMark(e *te.Editor) *gecore.ExtendedFunctionInterface {
 	}
 
 	mm := &modeMark{
-		items:      []string{},
-		minibuffer: gecore.NewMiniBuffer("", "Mark: ", false),
-		Editor:     e,
-		Screen:     screen.Get(),
+		items:               []string{},
+		MiniBufferPopupmenu: gecore.NewMiniBufferPopupmenu("", "Mark: ", false),
+		Editor:              e,
+		// Screen:     screen.Get(),
 	}
 	a := (gecore.ExtendedFunctionInterface)(mm)
 	return &a
 }
 
 type modeMark struct {
-	minibuffer         *gecore.MiniBuffer
+	*gecore.MiniBufferPopupmenu
 	baseWithoutSymbols string
 	marks              []*mark.Mark
 	items              []string
-	popupmenu          *gecore.Popupmenu
+	// popupmenu          *gecore.Popupmenu
 	// showPopupmenu      bool
 	*te.Editor
-	*screen.Screen
+	//*screen.Screen
 }
 
 func (m *modeMark) WillEnterMode() {
@@ -48,17 +47,19 @@ func (m *modeMark) WillExitMode() {
 }
 
 func (m *modeMark) Draw() {
-	m.minibuffer.Draw()
-	if m.popupmenu == nil {
-		// The position where the Popup menu is displayed is based on the minibuffer cursor position.
-		m.popupmenu = gecore.NewPopupmenu(utils.Rect{X: m.CX, Y: m.CY, Width: 32, Height: 10}, m.items, 0)
-	}
+	m.MiniBufferPopupmenu.Draw()
+	/*
+		if m.popupmenu == nil {
+			// The position where the Popup menu is displayed is based on the minibuffer cursor position.
+			m.popupmenu = gecore.NewPopupmenu(utils.Rect{X: m.CX, Y: m.CY, Width: 32, Height: 10}, m.items, 0)
+		}
+	*/
 	m.makeItems()
-	m.popupmenu.Draw()
+	// m.popupmenu.Draw()
 }
 
 func (m *modeMark) makeItems() {
-	baseWithoutSymbols := string(m.minibuffer.String())
+	baseWithoutSymbols := string(m.MiniBuffer.String())
 	if m.baseWithoutSymbols != "" && m.baseWithoutSymbols == baseWithoutSymbols {
 		return
 	}
@@ -76,17 +77,20 @@ func (m *modeMark) makeItems() {
 			m.marks = append(m.marks, mk)
 		}
 	}
-	i, _ := m.popupmenu.Item()
+	i, _ := m.Item()
 	if len(m.items) > 0 {
-		m.popupmenu.Set(m.items, i)
+		m.Popupmenu.Set(m.items, i)
 	}
 }
 
 func (m *modeMark) Event(tev *tcell.EventKey) *tcell.EventKey {
+	m.MiniBufferPopupmenu.Event(tev)
+
 	switch tev.Key() {
 	case tcell.KeyEnter:
 		// Get mark corresponding to the item
-		i, _ := m.popupmenu.Item()
+		i, _ := m.Item()
+		// verb.PP("marks %d, %v", i, m.marks)
 		mark := m.marks[i]
 
 		if utils.SameFile(m.GetPath(), mark.FilePath) {
@@ -103,12 +107,13 @@ func (m *modeMark) Event(tev *tcell.EventKey) *tcell.EventKey {
 			}
 		}
 		m.Cursor = mark.Cursor
-		// tev.Reset() // is need?
+		eventKey.Reset() // Exit this ExtendedFunctionInterface
 		return tev
-	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
+		/* 	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
 		m.popupmenu.Event(tev)
+		*/
 	default:
-		m.minibuffer.Event(tev)
+		// m.MiniBuffer.Event(tev)
 		m.makeItems()
 	}
 	return tev

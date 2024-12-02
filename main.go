@@ -11,13 +11,19 @@ import (
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
-
-	"github.com/ge-editor/utils"
 )
 
 var gScreen *screen.Screen
 var quit chan struct{} = make(chan struct{})
 var eventKey = gecore.KeyMapper()
+
+// -ldflags オプション
+// -Xフラグは、"linker flag"（リンカフラグ）の一部
+// "variable substitution"（変数代入）
+var (
+	buildTime string
+	gitCommit string
+)
 
 func main() {
 	gScreen = screen.Get()
@@ -30,12 +36,10 @@ func main() {
 	tree.SetRootTree(tree.NewRootTree(v))
 	tree.ActiveTreeSet(tree.GetRootTree())
 
-	mainLoop()
-}
+	// First echo
+	gScreen.Echo(fmt.Sprintf("Build Time: %s, Git Commit: %s", buildTime, gitCommit))
 
-// Return Screen Rect without Minibuffer
-func rootRect() utils.Rect {
-	return utils.Rect{X: 0, Y: 0, Width: gScreen.Width, Height: gScreen.Height - 1}
+	mainLoop()
 }
 
 var tcellEvent chan tcell.Event
@@ -73,7 +77,8 @@ func consumeMoreEvents() bool {
 }
 
 func draw() {
-	tree.GetRootTree().Resize(rootRect())
+	// これが無いと分割後のサイズがゼロになる
+	// tree.GetRootTree().Resize(rootRect())
 
 	// Easily measure drawing time
 	result := testing.Benchmark(func(b *testing.B) {
@@ -86,6 +91,8 @@ func draw() {
 
 	// Extensions must do their Screen.PrintEcho insted of Screen.Echo
 	if eventKey.IsExtendedFunctionValid() {
+		// これが無いと分割後のサイズがゼロになる
+		// tree.GetRootTree().Resize(gScreen.RootRect())
 		(*eventKey.GetExtendedFunctionInterface()).Draw()
 	} else {
 		screen.Get().PrintEcho()
@@ -122,6 +129,7 @@ func event(tev *tcell.Event) bool {
 	case *tcell.EventResize:
 		// verb.PP("EventResize %v", ev)
 		gScreen.Resize(ev.Size())
+		tree.GetRootTree().Resize(gScreen.RootRect()) // R1
 	case *tcell.EventKey:
 		// verb.PP("EventKey %v", ev)
 		functions.Macro.Append(tev)
@@ -130,5 +138,6 @@ func event(tev *tcell.Event) bool {
 		}
 		functions.EventKey(ev, quit)
 	}
+	tree.GetRootTree().Event(tev)
 	return false
 }
