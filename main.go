@@ -55,7 +55,7 @@ func mainLoop() {
 		ev := <-tcellEvent
 		event(&ev)
 		if consumeMoreEvents() {
-			break
+			break // quit ge-editor
 		}
 		draw()
 		gScreen.Show()
@@ -67,7 +67,6 @@ func consumeMoreEvents() bool {
 		select {
 		case ev := <-tcellEvent:
 			event(&ev)
-			return false
 		case <-quit:
 			return true
 		default:

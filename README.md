@@ -174,7 +174,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | C-x C-x             | Swap cursor and mark locations
 | C-u                 | Open mark list
 | ~~C-x > (>...)~~    | ~~Indent region (lines between the cursor and the mark)~~
-| ~~C-x \< (\<...)~~  | ~~Deindent region (lines between the cursor and the mark)~~
+| ~~C-x \< (\<...)~~  | ~~Outdent region (lines between the cursor and the mark)~~
 | ~~C-x C-r~~         | ~~Search & replace (within region) [prompt]~~
 | ~~C-x C-u~~         | ~~Convert the region to upper case~~
 | ~~C-x C-l~~         | ~~Convert the region to lower case~~
@@ -187,7 +187,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Advanced:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
-| [F2]                | ~~Refactaring~~
+| [F2]                | ~~Refactoring~~
 | [F4]                | ~~case...~~
 | ~~M-/~~             | ~~Local words autocompletion~~
 | ~~C-x C-a~~         | ~~Invoke buffer specific autocompletion menu [menu]~~
@@ -202,6 +202,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Reserved:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
-| Ctrl-j              |
+| Ctrl-;              | Use japanese input method
 
 ---

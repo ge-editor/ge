@@ -4,16 +4,14 @@ go 1.23.3
 
 require (
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/ge-editor/gecore v0.0.0-20240330124221-a1cdf6c8535c
-	github.com/ge-editor/te v0.0.0-20240628030517-c867f17c21a2
-	github.com/ge-editor/utils v0.0.0-20240330122644-9a33cd6604f9
-	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d
-	golang.org/x/text v0.20.0
+	github.com/ge-editor/gecore v0.0.0-20241203094337-c0157ef32b44
+	github.com/ge-editor/te v0.0.0-20241203100406-c4d8d405ecc6
+	github.com/ge-editor/utils v0.0.0-20241203095458-38bf303eb68b
 )
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/ge-editor/theme v0.0.0-20240330115119-59d19152f05e // indirect
+	github.com/ge-editor/theme v0.0.0-20241203095829-4aba4a283982 // indirect
 )
 
 require (
@@ -23,4 +21,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.26.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
 )
+
