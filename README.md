@@ -118,6 +118,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | v                   | Split active view vertically
 | h                   | Split active view horizontally
 | k                   | Kill active view
+| t                   | Insert view to top
+| r                   | Insert view to right
+| b                   | Insert view to bottom
+| l                   | Insert view to left
+| s                   | Switch split direction
 | C-f, \<right>       | Expand/shrink active view to the right
 | C-b, \<left>        | Expand/shrink active view to the left
 | C-n, \<down>        | Expand/shrink active view to the bottom

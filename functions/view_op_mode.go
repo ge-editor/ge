@@ -122,9 +122,21 @@ func (e view_op_mode) Event(tev *tcell.EventKey) *tcell.EventKey {
 		case 'k':
 			tree.ActiveTreeGet().Remove()
 			return tev
+		case 't':
+			tree.ActiveTreeGet().InsertTop()
+			return tev
 		case 'r':
-			// Swap tree.leaf
-			// not implemented
+			tree.ActiveTreeGet().InsertRight()
+			return tev
+		case 'b':
+			tree.ActiveTreeGet().InsertBottom()
+			return tev
+		case 'l':
+			tree.ActiveTreeGet().InsertLeft()
+			return tev
+		case 's':
+			tree.ActiveTreeGet().SwitchSplitDirection()
+			return tev
 		}
 	}
 

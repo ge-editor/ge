@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -45,10 +44,15 @@ func main() {
 var tcellEvent chan tcell.Event
 
 func mainLoop() {
-	tcellEvent = make(chan tcell.Event, 20)
+	// 256-512 標準的なユースケースで充分な値
+	tcellEvent = make(chan tcell.Event, 256)
 	go func() {
 		for {
 			tcellEvent <- gScreen.PollEvent()
+			// Monitoring tcellEvent buffer
+			if len(tcellEvent) == cap(tcellEvent) {
+				gScreen.Echo("tcellEvent Buffer is full")
+			}
 		}
 	}()
 	for {
@@ -75,23 +79,18 @@ func consumeMoreEvents() bool {
 	}
 }
 
-func draw() {
-	// これが無いと分割後のサイズがゼロになる
-	// tree.GetRootTree().Resize(rootRect())
+// debug
+var drawCount int
 
-	// Easily measure drawing time
-	result := testing.Benchmark(func(b *testing.B) {
-		// == start ==
-		tree.GetRootTree().Draw()
-		// == end ==
-	})
-	// put results
-	gScreen.Echo(fmt.Sprintf("Draw: %.6fs", result.T.Seconds()))
+func draw() {
+	// debug
+	gScreen.Echo(fmt.Sprintf("draw %d", drawCount))
+	drawCount += 1
+
+	tree.GetRootTree().Draw()
 
 	// Extensions must do their Screen.PrintEcho insted of Screen.Echo
 	if eventKey.IsExtendedFunctionValid() {
-		// これが無いと分割後のサイズがゼロになる
-		// tree.GetRootTree().Resize(gScreen.RootRect())
 		(*eventKey.GetExtendedFunctionInterface()).Draw()
 	} else {
 		screen.Get().PrintEcho()
@@ -121,7 +120,7 @@ func macroEvent(tev *tcell.Event) bool {
 	return false
 }
 
-func event(tev *tcell.Event) bool {
+func event(tev *tcell.Event) {
 	switch ev := (*tev).(type) {
 	// case *tcell.EventInterrupt:
 	// 	verb.PP("EventInterrupt")
@@ -133,10 +132,9 @@ func event(tev *tcell.Event) bool {
 		// verb.PP("EventKey %v", ev)
 		functions.Macro.Append(tev)
 		if macroEvent(tev) {
-			return false
+			return
 		}
 		functions.EventKey(ev, quit)
 	}
 	tree.GetRootTree().Event(tev)
-	return false
 }
