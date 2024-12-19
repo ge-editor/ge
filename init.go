@@ -8,7 +8,8 @@ import (
 
 	"github.com/ge-editor/te"
 
-	"github.com/ge-editor/langs"
+	"github.com/ge-editor/langs/fundamental"
+	"github.com/ge-editor/langs/go_mode"
 )
 
 func init() {
@@ -23,9 +24,9 @@ func init() {
 	// ----------------------------------
 
 	// Register default lang Mode
-	lang.Modes.Register(langs.NewFundamental())
+	lang.Modes.Register(fundamental.NewFundamental())
 	// Register lang Mode
-	lang.Modes.Register(langs.NewGoMode())
+	lang.Modes.Register(go_mode.NewGoMode())
 
 	// ----------------------------------
 	// tree View
