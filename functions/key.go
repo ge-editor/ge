@@ -12,58 +12,57 @@ import (
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
 
-	"github.com/ge-editor/te"
+	"github.com/ge-editor/editorview"
 )
 
-var eventKey = gecore.KeyMapper()
-var eventKey2 = gecore.KeyMapper()
-
 var (
-	errQuit = errors.New("quit")
+	eventKeyTopPriority = gecore.KeyMapper()
+	eventKeyCommon      = gecore.KeyMapper()
+	errQuit             = errors.New("quit")
 )
 
 func init() {
 	s := screen.Get()
-	eventKey.Bind([]string{"Ctrl+G"}, func() {
-		eventKey.Reset()
+	eventKeyTopPriority.Bind([]string{"Ctrl+G"}, func() {
+		eventKeyTopPriority.Reset()
 		s.Echo("Cancel")
 	})
-	eventKey.Bind([]string{"Ctrl+Z"}, s.Suspend)
-	eventKey.Bind([]string{"Ctrl+X", "Ctrl+C"}, func() error {
+	eventKeyTopPriority.Bind([]string{"Ctrl+Z"}, s.Suspend)
+	eventKeyTopPriority.Bind([]string{"Ctrl+X", "Ctrl+C"}, func() error {
 		return errQuit
 	})
-	eventKey.Bind([]string{"Ctrl+L"}, func() {
+	eventKeyTopPriority.Bind([]string{"Ctrl+L"}, func() {
 		tree.GetRootTree().Redraw()
 	})
 
 	// event key 2
 	// ESC-x
-	eventKey2.Bind([]string{"Escape", "x"}, func() error {
-		eventKey2.SetExtendedFunction(newInputCommand("", "ESC-x: ", func(str string) {
+	eventKeyCommon.Bind([]string{"Escape", "x"}, func() error {
+		eventKeyCommon.SetExtendedFunction(newInputCommand("", "ESC-x: ", func(str string) {
 			s.Echo(str)
 		}))
 		return gecore.ErrCodeExtendedFunction
 	})
 	// Keyboard macro
-	eventKey2.Bind([]string{"Ctrl+X", "("}, func() {
+	eventKeyCommon.Bind([]string{"Ctrl+X", "("}, func() {
 		Macro.StartRecording()
 		s.Echo("Defining keyboard macro...")
-		eventKey2.Reset()
+		eventKeyCommon.Reset()
 	})
-	eventKey2.Bind([]string{"Ctrl+X", ")"}, func() {
+	eventKeyCommon.Bind([]string{"Ctrl+X", ")"}, func() {
 		Macro.StopRecording()
 		s.Echo("Keyboard macro defined")
-		eventKey2.Reset()
+		eventKeyCommon.Reset()
 	})
-	eventKey2.Bind([]string{"Ctrl+X", "e"}, func() {
+	eventKeyCommon.Bind([]string{"Ctrl+X", "e"}, func() {
 		Macro.SetReplayMode(true)
 		s.Echo("(Type e to repeat macro)")
-		eventKey2.Reset()
+		eventKeyCommon.Reset()
 	})
 	// Operation mode
-	eventKey2.Bind([]string{"Ctrl+X", "o"}, tree.ActiveTreeGet().NextInCycle)
-	eventKey2.Bind([]string{"Ctrl+X", "Ctrl+W"}, func() {
-		eventKey2.SetExtendedFunction(newOpMode())
+	eventKeyCommon.Bind([]string{"Ctrl+X", "o"}, tree.ActiveTreeGet().NextInCycle)
+	eventKeyCommon.Bind([]string{"Ctrl+X", "Ctrl+W"}, func() {
+		eventKeyCommon.SetExtendedFunction(newOpMode())
 	})
 	/*
 		opMode := newOpMode()
@@ -79,7 +78,9 @@ func init() {
 func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 	s := screen.Get()
 
-	err := eventKey.Execute(eKey, true)
+	// fmt.Printf("EventKey mod %v, key %v, ch %q\n", eKey.Modifiers(), eKey.Key(), eKey.Rune())
+
+	err := eventKeyTopPriority.Execute(eKey, true)
 
 	if err == errQuit {
 		// Here, only editor is checked, but
@@ -87,17 +88,17 @@ func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 		if !editor.IsDirtyFlag() {
 			close(quit)
 		}
-		eventKey.SetExtendedFunction(newQuit(quit))
+		eventKeyTopPriority.SetExtendedFunction(newQuit(quit))
 		return eKey
 	}
 
 	// Should be to continue next key bindings?
-	if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
-		eventKey.Reset()
+	if !eventKeyTopPriority.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
+		eventKeyTopPriority.Reset()
 		return eKey
 	}
 
-	err = eventKey2.Execute(eKey, false)
+	err = eventKeyCommon.Execute(eKey, false)
 	// verb.PP("^Execute 2 %v", err)
 
 	if err == gecore.ErrCodeKeyBound {
@@ -116,8 +117,8 @@ func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 	if err == gecore.ErrCodeExtendedFunction {
 		return eKey
 	}
-	if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
-		eventKey.Reset()
+	if !eventKeyTopPriority.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
+		eventKeyTopPriority.Reset()
 		return eKey
 	}
 
@@ -130,12 +131,12 @@ func EventKey(eKey *tcell.EventKey, quit chan struct{}) *tcell.EventKey {
 }
 
 var eventKeyEditor = gecore.KeyMapper()
-var editor *te.Editor
+var editor *editorview.Editor
 
 func init() {
 	s := screen.Get()
 
-	eventKeyEditor.Bind([]string{"Ctrl+X", "x"}, func() {
+	eventKeyEditor.Bind([]string{"Ctrl+X", "Ctrl+X"}, func() {
 		editor.SwapCursorAndMark()
 		s.Echo("")
 	})
@@ -147,15 +148,15 @@ func init() {
 		}
 	})
 	eventKeyEditor.Bind([]string{"Ctrl+X", "Ctrl+F"}, func() {
-		eventKey.SetExtendedFunction(newFindFile())
+		eventKeyTopPriority.SetExtendedFunction(newFindFile())
 	})
 
 	// Search and replace
 	eventKeyEditor.Bind([]string{"Ctrl+s"}, func() {
-		eventKey.SetExtendedFunction(search)
+		eventKeyTopPriority.SetExtendedFunction(search)
 	})
 	eventKeyEditor.Bind([]string{"Ctrl+r"}, func() {
-		eventKey.SetExtendedFunction(search)
+		eventKeyTopPriority.SetExtendedFunction(search)
 	})
 
 	eventKeyEditor.Bind([]string{"Ctrl+X", "k"}, func() {
@@ -179,12 +180,12 @@ func init() {
 			editor.OpenFile(str)
 			eventKeyEditor.Reset()
 		}, true)
-		eventKey.SetExtendedFunction(pp)
+		eventKeyTopPriority.SetExtendedFunction(pp)
 	})
 
 	eventKeyEditor.Bind([]string{"Ctrl+X", "w"}, func() error {
 		// C-x M-s : Save file as
-		eventKey.SetExtendedFunction(newInputCommand(editor.File.GetPath(), "File to save in: ", func(str string) {
+		eventKeyTopPriority.SetExtendedFunction(newInputCommand(editor.File.GetPath(), "File to save in: ", func(str string) {
 			editor.ChangeFilePath(str)
 			editor.SaveFile()
 		}))
@@ -200,7 +201,7 @@ func init() {
 			return
 		}
 		editor.Redo()
-		eventKey.SetExtendedFunction(newRedo(editor))
+		eventKeyTopPriority.SetExtendedFunction(newRedo(editor))
 	})
 	// tcell.KeyCtrlUnderscore:
 	// tcell.KeyCtrlSlash:
@@ -223,10 +224,10 @@ func init() {
 		editor.MoveCursorBeginningOfLine()
 	})
 
-	eventKey2.Bind([]string{"Escape", "<"}, func() {
+	eventKeyEditor.Bind([]string{"Escape", "<"}, func() {
 		editor.MoveCursorBeginningOfFile()
 	})
-	eventKey2.Bind([]string{"Escape", ">"}, func() {
+	eventKeyEditor.Bind([]string{"Escape", ">"}, func() {
 		editor.MoveCursorEndOfFile()
 	})
 
@@ -247,7 +248,7 @@ func init() {
 	/*
 		Redraw() instead of
 		eventKeyEditor.Bind([]string{"Ctrl+L"}, func() {
-			editor.OnVCommand(te.VCommand_recenter, 0)
+			editor.OnVCommand(editorview.VCommand_recenter, 0)
 		})
 	*/
 
@@ -264,20 +265,25 @@ func init() {
 	eventKeyEditor.Bind([]string{"Ctrl+K"}, func() {
 		editor.KillLine()
 	})
+	eventKeyEditor.Bind([]string{"Ctrl+U"}, func() {
+		// unix-line-discard
+		// backward-kill-line
+		editor.BackwardKillLine()
+	})
 	eventKeyEditor.Bind([]string{"Ctrl+Space"}, func() { // Ctrl-@
 		editor.SetMark()
 	})
-	eventKeyEditor.Bind([]string{"Ctrl+U"}, func() {
+	eventKeyEditor.Bind([]string{"Alt+u"}, func() {
 		m := newModeMark(editor)
 		if m == nil {
 			s.Echo("The mark is not set now")
 		} else {
-			eventKey.SetExtendedFunction(m)
+			eventKeyTopPriority.SetExtendedFunction(m)
 		}
 	})
 
 	eventKeyEditor.Bind([]string{"F8"}, func() {
-		eventKey.SetExtendedFunction(newVi(editor))
+		eventKeyTopPriority.SetExtendedFunction(newVi(editor))
 	})
 
 	eventKeyEditor.Bind([]string{"Ctrl+X", "i"}, func() {
@@ -335,14 +341,13 @@ func init() {
 
 	// Still not working properly
 	eventKeyEditor.Bind([]string{"Enter"}, func() {
-		// editor.OnVCommand(te.VCommand_autoindent, '\n')
+		// editor.OnVCommand(editorview.VCommand_autoindent, '\n')
 		editor.Autoindent()
 	})
 	// Still not working properly
 	// eventKeyEditor.Bind([]string{"Ctrl+\\"}, func() {
 	eventKeyEditor.Bind([]string{"Ctrl+J"}, func() {
-		// editor.OnVCommand(te.VCommand_insert_rune, '\n')
-		editor.Autoindent()
+		// editor.Autoindent()
 		editor.InsertRune('\n')
 	})
 
@@ -365,7 +370,7 @@ func init() {
 	})
 
 	eventKeyEditor.Bind([]string{"Alt+g"}, func() {
-		eventKey.SetExtendedFunction(newJumpLine(editor))
+		eventKeyTopPriority.SetExtendedFunction(newJumpLine(editor))
 	})
 }
 
@@ -374,17 +379,17 @@ func eventActiveTreeLeaf(tev *tcell.EventKey) (*tcell.EventKey, error) {
 	var err error
 	leaf := tree.ActiveTreeGet().GetLeaf()
 	switch tl := (*leaf).(type) {
-	case *te.Editor:
+	case *editorview.Editor:
 		editor = tl
 		err = eventKeyEditor.Execute(tev, false)
 		if err == gecore.ErrCodeKeyBound {
 			return tev, err
 		}
-		if !eventKey.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
-			eventKey.Reset()
+		if !eventKeyEditor.IsExtendedFunctionValid() && err != gecore.ErrCodeKeyBound && err != gecore.ErrCodeKeyBindingNotFount {
+			eventKeyEditor.Reset()
 			return tev, err
 		}
-		if eventKey.IsExtendedFunctionValid() {
+		if eventKeyEditor.IsExtendedFunctionValid() {
 			return tev, err
 		}
 		if tev.Rune() < 32 || tev.Rune() == define.DEL {

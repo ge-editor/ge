@@ -6,10 +6,10 @@ import (
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/screen"
 
-	"github.com/ge-editor/te"
+	"github.com/ge-editor/editorview"
 )
 
-func newVi(e *te.Editor) *gecore.ExtendedFunctionInterface {
+func newVi(e *editorview.Editor) *gecore.ExtendedFunctionInterface {
 	v := &vi{
 		Editor: e,
 		Screen: screen.Get(),
@@ -19,7 +19,7 @@ func newVi(e *te.Editor) *gecore.ExtendedFunctionInterface {
 }
 
 type vi struct {
-	*te.Editor
+	*editorview.Editor
 	*screen.Screen
 }
 

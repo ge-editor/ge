@@ -120,7 +120,7 @@ func (e view_op_mode) Event(tev *tcell.EventKey) *tcell.EventKey {
 			tree.ActiveTreeGet().SplitVertically()
 			return tev
 		case 'k':
-			tree.ActiveTreeGet().Remove()
+			tree.ActiveTreeGet().DeleteWindow()
 			return tev
 		case 't':
 			tree.ActiveTreeGet().InsertTop()

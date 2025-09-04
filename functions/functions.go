@@ -6,7 +6,7 @@ import (
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/screen"
 
-	"github.com/ge-editor/te"
+	"github.com/ge-editor/editorview"
 )
 
 // Quit editor
@@ -42,7 +42,7 @@ func (q *quitFunction) Event(k *tcell.EventKey) *tcell.EventKey {
 	if q.answer == 'y' {
 		close(q.quit)
 	} else if q.answer == 'n' {
-		eventKey.Reset()
+		eventKeyTopPriority.Reset()
 		q.Echo("")
 	}
 	q = nil
@@ -51,7 +51,7 @@ func (q *quitFunction) Event(k *tcell.EventKey) *tcell.EventKey {
 
 // Editor function redo mode
 
-func newRedo(e *te.Editor) *gecore.ExtendedFunctionInterface {
+func newRedo(e *editorview.Editor) *gecore.ExtendedFunctionInterface {
 	q := &redoFunction{
 		Screen: screen.Get(),
 		Editor: e,
@@ -62,7 +62,7 @@ func newRedo(e *te.Editor) *gecore.ExtendedFunctionInterface {
 
 type redoFunction struct {
 	*screen.Screen
-	*te.Editor
+	*editorview.Editor
 }
 
 func (r *redoFunction) WillEnterMode() {
@@ -87,7 +87,7 @@ func (r *redoFunction) Event(tev *tcell.EventKey) *tcell.EventKey {
 		return tev
 	}
 	r.Echo("")
-	eventKey.Reset()
+	eventKeyTopPriority.Reset()
 	r = nil
 	return tev
 }

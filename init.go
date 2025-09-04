@@ -6,7 +6,7 @@ import (
 	"github.com/ge-editor/gecore/lang"
 	"github.com/ge-editor/gecore/tree"
 
-	"github.com/ge-editor/te"
+	"github.com/ge-editor/editorview"
 
 	"github.com/ge-editor/langs/fundamental"
 	"github.com/ge-editor/langs/go_mode"
@@ -33,7 +33,7 @@ func init() {
 	// ----------------------------------
 	tree.Views = tree.NewViews()
 	// Register Default User View
-	tree.Views.Register(te.NewView( /* &a */ ))
+	tree.Views.Register(editorview.NewView( /* &a */ ))
 	// Register User Views
 	// tree.Views.Register(another.NewView())
 	// ...

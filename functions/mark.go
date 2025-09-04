@@ -10,12 +10,12 @@ import (
 
 	"github.com/ge-editor/utils"
 
-	"github.com/ge-editor/te"
-	"github.com/ge-editor/te/mark"
+	"github.com/ge-editor/editorview"
+	"github.com/ge-editor/editorview/mark"
 )
 
-func newModeMark(e *te.Editor) *gecore.ExtendedFunctionInterface {
-	if len(*te.Marks) == 0 {
+func newModeMark(e *editorview.Editor) *gecore.ExtendedFunctionInterface {
+	if len(*editorview.Marks) == 0 {
 		return nil
 	}
 
@@ -23,6 +23,7 @@ func newModeMark(e *te.Editor) *gecore.ExtendedFunctionInterface {
 		items:               []string{},
 		MiniBufferPopupmenu: gecore.NewMiniBufferPopupmenu("", "Mark: ", false),
 		Editor:              e,
+		showPopupmenu:       true,
 		// Screen:     screen.Get(),
 	}
 	a := (gecore.ExtendedFunctionInterface)(mm)
@@ -35,8 +36,8 @@ type modeMark struct {
 	marks              []*mark.Mark
 	items              []string
 	// popupmenu          *gecore.Popupmenu
-	// showPopupmenu      bool
-	*te.Editor
+	showPopupmenu bool
+	*editorview.Editor
 	//*screen.Screen
 }
 
@@ -47,7 +48,7 @@ func (m *modeMark) WillExitMode() {
 }
 
 func (m *modeMark) Draw() {
-	m.MiniBufferPopupmenu.Draw()
+	// m.MiniBufferPopupmenu.Draw()
 	/*
 		if m.popupmenu == nil {
 			// The position where the Popup menu is displayed is based on the minibuffer cursor position.
@@ -55,7 +56,9 @@ func (m *modeMark) Draw() {
 		}
 	*/
 	m.makeItems()
+	m.MiniBufferPopupmenu.ShowPopupmenu(m.showPopupmenu)
 	// m.popupmenu.Draw()
+	m.MiniBufferPopupmenu.Draw()
 }
 
 func (m *modeMark) makeItems() {
@@ -67,8 +70,8 @@ func (m *modeMark) makeItems() {
 
 	m.marks = []*mark.Mark{}
 	m.items = []string{}
-	for i := len(*te.Marks) - 1; i >= 0; i-- {
-		mk := (*te.Marks)[i]
+	for i := len(*editorview.Marks) - 1; i >= 0; i-- {
+		mk := (*editorview.Marks)[i]
 		filePath := filepath.Base((*mk).FilePath)
 		current := (*mk).Cursor
 		item := fmt.Sprintf("%s %d %s", filePath, current.RowIndex, (*mk).Content)
@@ -98,7 +101,7 @@ func (m *modeMark) Event(tev *tcell.EventKey) *tcell.EventKey {
 			m.Meta.Mark = mark
 		} else {
 			// Change the edit buffer
-			file, _, err := te.BufferSets.GetFileAndMeta(mark.FilePath)
+			file, _, err := editorview.BufferSets.GetFileAndMeta(mark.FilePath)
 			m.SetFile(file)
 			if err != nil {
 				m.Echo(err.Error())
@@ -107,7 +110,7 @@ func (m *modeMark) Event(tev *tcell.EventKey) *tcell.EventKey {
 			}
 		}
 		m.Cursor = mark.Cursor
-		eventKey.Reset() // Exit this ExtendedFunctionInterface
+		eventKeyTopPriority.Reset() // Exit this ExtendedFunctionInterface
 		return tev
 		/* 	case tcell.KeyCtrlN, tcell.KeyDown, tcell.KeyCtrlP, tcell.KeyUp:
 		m.popupmenu.Event(tev)

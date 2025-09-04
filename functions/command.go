@@ -4,12 +4,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/ge-editor/gecore"
+
+	"github.com/ge-editor/utils/componets"
 )
 
 // Equivalent to "Esc x" in Emacs
 func newInputCommand(message, prefix string, fn func(string)) *gecore.ExtendedFunctionInterface {
 	mb := &minibufferStruct{
-		MiniBuffer: gecore.NewMiniBuffer(message, prefix, false),
+		// MiniBuffer: gecore.NewMiniBuffer(message, prefix, false),
+		MiniBuffer: componets.NewMiniBuffer(message, prefix, false),
 		callback:   fn,
 	}
 	a := (gecore.ExtendedFunctionInterface)(mb)
@@ -17,7 +20,8 @@ func newInputCommand(message, prefix string, fn func(string)) *gecore.ExtendedFu
 }
 
 type minibufferStruct struct {
-	*gecore.MiniBuffer
+	// *gecore.MiniBuffer
+	*componets.MiniBuffer
 	callback func(string)
 }
 
@@ -32,7 +36,7 @@ func (m *minibufferStruct) Event(tev *tcell.EventKey) *tcell.EventKey {
 	switch tev.Key() {
 	case tcell.KeyEnter:
 		m.callback(m.String())
-		eventKey.Reset()
+		eventKeyTopPriority.Reset()
 		return tev
 	}
 	return tev

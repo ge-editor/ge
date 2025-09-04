@@ -34,7 +34,7 @@ utils package:
 
 - Utility functions
 
-te package:
+editorview package:
 
 - Text editor functionalities
 - Default view in ge (TreeLeaf interface)
@@ -43,6 +43,16 @@ theme package:
 
 - Color definitions
 - Mark character definitions
+
+lang package:
+
+- Support file types
+  - Fundamental, Go, ...
+
+locale package:
+
+- Support languages
+  - English, Japanese, ...
 
 **Near-Term Goals:**
 - Functionality and code optimization
@@ -155,10 +165,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | ~~M-d~~             | ~~Kill word~~
 | ~~M-\<backspace>~~  | ~~Kill word backwards~~
 | C-k                 | Kill line
+| C-u                 | Kill line backwards
 | ~~M-u~~             | ~~Convert the following word to upper case~~
 | ~~M-l~~             | ~~Convert the following word to lower case~~
 | ~~M-c~~             | ~~Capitalize the following word~~
-| \<any other key>    | Insert character
 
 ### Search and replace operations:
 |  key                |  function                             |
@@ -177,7 +187,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 |---------------------|---------------------------------------|
 | C-@, C-\<space>     | Set mark
 | C-x C-x             | Swap cursor and mark locations
-| C-u                 | Open mark list
+| M-u                 | Open mark list
 | ~~C-x > (>...)~~    | ~~Indent region (lines between the cursor and the mark)~~
 | ~~C-x \< (\<...)~~  | ~~Outdent region (lines between the cursor and the mark)~~
 | ~~C-x C-r~~         | ~~Search & replace (within region) [prompt]~~
@@ -207,6 +217,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Reserved:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
-| Ctrl-;              | Use japanese input method
+| C-;                 | Use japanese input method
 
 ---

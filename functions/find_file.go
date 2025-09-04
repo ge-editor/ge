@@ -12,7 +12,7 @@ import (
 
 	"github.com/ge-editor/utils"
 
-	"github.com/ge-editor/te"
+	"github.com/ge-editor/editorview"
 )
 
 // Equivalent of "C-x C-f" in Emacs.
@@ -68,8 +68,8 @@ func (ff *findFileStruct) Event(eKey *tcell.EventKey) *tcell.EventKey {
 			// break
 		}
 		filePath := string(ff.MiniBufferPopupmenu.String())
-		err := (*tree.ActiveTreeGet().GetLeaf()).(*te.Editor).OpenFile(filePath)
-		eventKey.Reset()
+		err := (*tree.ActiveTreeGet().GetLeaf()).(*editorview.Editor).OpenFile(filePath)
+		eventKeyTopPriority.Reset()
 		if err != nil {
 			ff.Echo(err.Error())
 		} else {

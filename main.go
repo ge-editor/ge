@@ -83,6 +83,9 @@ func consumeMoreEvents() bool {
 var drawCount int
 
 func draw() {
+	// これが無いと分割後のサイズがゼロになる
+	// tree.GetRootTree().Resize(gScreen.RootRect())
+
 	// debug
 	gScreen.Echo(fmt.Sprintf("draw %d", drawCount))
 	drawCount += 1
