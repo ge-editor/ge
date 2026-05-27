@@ -1,0 +1,28 @@
+name: Mirror to Codeberg
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Codeberg
+        run: |
+          git remote add codeberg \
+            https://${{ secrets.CODEBERG_TOKEN }}@codeberg.org/ge-editor/ge.git
+
+          git push --mirror codeberg
