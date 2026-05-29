@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ge-editor/gecore"
+	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/keychord"
 )
 
@@ -9,7 +9,7 @@ import (
 // Most editing keys are inherited, but 'Ctrl+Enter' commits the session.
 
 // Minibuffer の標準キーマッピング
-func KeysetMinibufferCommon(km *keychord.RootNode, editor *gecore.Editorleaf) {
+func KeysetMinibufferCommon(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 	KeysetEditorleafCommon(km, editor)
 
 	// Ctrl+Enter

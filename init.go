@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ge-editor/gecore"
+	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore/lang"
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
@@ -41,7 +41,7 @@ func init() {
 
 	// Register Default User View
 	err := tree.LeafTypes.Register("editorleaf", func() tree.LeafType {
-		return gecore.NewLeafType(KeysetEditorleaf)
+		return editorleaf.NewLeafType(KeysetEditorleaf)
 	}, 0)
 	if err != nil {
 		gelog.Error("LeafType already registered", "err", err)

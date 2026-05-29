@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/mode"
 	"github.com/ge-editor/gecore/modes"
@@ -13,7 +14,7 @@ import (
 	"github.com/ge-editor/keychord"
 )
 
-func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *gecore.Editorleaf) {
+func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 	editorKey.Bind("Ctrl+L").Do(func() {
 		editor.Recenter()
@@ -30,7 +31,7 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *gecore.Editorl
 
 	// Redo Mode
 	redoModeFactory := func() mode.Mode {
-		return modes.NewRedoMode(gecore.ModeManager, func(rmKey *keychord.RootNode, rm *modes.RedoMode) {
+		return modes.NewRedoMode(modeManager, func(rmKey *keychord.RootNode, rm *modes.RedoMode) {
 			rmKey.Bind("/").Do(func() {
 				if editor.IsRedoEmpty() {
 					gecore.Echo.AddText("Redo buffer is empty")
@@ -44,7 +45,7 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *gecore.Editorl
 		})
 	}
 	editorKey.Bind("Ctrl+X", "/").Do(func() {
-		gecore.ModeManager.Push(redoModeFactory())
+		modeManager.Push(redoModeFactory())
 		gecore.Echo.AddText("(Type / to repeat redo)")
 	})
 
@@ -75,13 +76,13 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *gecore.Editorl
 	editorKey.Bind("Ctrl+U").Do(editor.BackwardKillLine)
 
 	editorKey.Bind("Alt+g").Do(func() {
-		mbManager := gecore.MinibufferManager()
+		mbManager := editorleaf.MinibufferManager()
 		if mbManager.IsActive() {
 			return
 		}
 
-		mbSession := gecore.NewSession(fmt.Sprintf("Goto line (1-%d): ", editor.RowsLength()),
-			func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+		mbSession := editorleaf.NewSession(fmt.Sprintf("Goto line (1-%d): ", editor.RowsLength()),
+			func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 				// 最初にデフォルトキーをマッピングする
 				KeysetMinibufferCommon(km, miniEditor)
 

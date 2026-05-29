@@ -10,8 +10,9 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 
+	"github.com/ge-editor/editorleaf"
+	"github.com/ge-editor/editorleaf/buffer"
 	"github.com/ge-editor/gecore"
-	"github.com/ge-editor/gecore/buffer"
 	"github.com/ge-editor/gecore/manager"
 	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/popupmenu"
@@ -21,19 +22,19 @@ import (
 	"github.com/ge-editor/utils"
 )
 
-func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
+func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 	KeysetEditorleafCommon(km, editor)
 
 	km.Bind("Enter").Do(editor.Autoindent)
 
 	// Command palette
 	km.Bind("Alt+p").Do(func() {
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			return
 		}
 
-		mbSession := gecore.NewSession("Command: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+		mbSession := editorleaf.NewSession("Command: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 			// 最初にデフォルトキーをマッピングする
 			KeysetMinibufferCommon(km, miniEditor)
 
@@ -60,13 +61,13 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 	// import
 	// Session (gecore.Session) からは UI の状態を見てはいけない
 	km.Bind("Ctrl+S").Do(func() {
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			// すでに minibuffer がアクティブなら何もしない
 			return
 		}
 
-		mbSession := gecore.NewSession("Search: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+		mbSession := editorleaf.NewSession("Search: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 			// 最初にデフォルトキーをマッピングする
 			KeysetMinibufferCommon(km, miniEditor)
 
@@ -111,11 +112,11 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 
 		if editor.IsDirtyFlag() {
 			// Minibuffer
-			mb := gecore.MinibufferManager()
+			mb := editorleaf.MinibufferManager()
 			if !mb.IsActive() {
 				base := filepath.Base(editor.GetPath())
 				prompt := fmt.Sprintf("Save changes to %s before closing? [y/n]: ", base)
-				mbSession := gecore.NewSession(prompt, func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+				mbSession := editorleaf.NewSession(prompt, func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 					km.BindKeyEvent(func(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
 						switch ev.Str() {
 						case "y", "Y":
@@ -145,7 +146,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 		}
 
 		// Minibuffer
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		// Popupmenu
 		pm := manager.NewPopupmenuManager()
 
@@ -184,7 +185,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 					editor.SetCurrentMark(mark)
 				} else {
 					// Change the edit buffer
-					file, _, result, err := gecore.BufferSets.GetFileAndMeta(mark.File.GetPath())
+					file, _, result, err := editorleaf.BufferSets.GetFileAndMeta(mark.File.GetPath())
 					if err != nil {
 						gecore.Echo.AddText(err.Error())
 					}
@@ -203,7 +204,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 
 		// Minibuffer
 		if !mb.IsActive() {
-			mbSession := gecore.NewSession("Filter: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+			mbSession := editorleaf.NewSession("Filter: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 				pm.SetItems(updateItems()) // here, need first layout drawing.
 
 				KeysetMinibufferCommon(km, miniEditor)
@@ -220,7 +221,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 	// これは、ひとまず OK
 	km.Bind("Ctrl+X", "b").Do(func() {
 		// Minibuffer
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		// Popupmenu
 		pm := manager.NewPopupmenuManager()
 
@@ -272,7 +273,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 		pm.Start(pmSession)
 
 		if !mb.IsActive() {
-			mbSession := gecore.NewSession("Switch buffer to: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+			mbSession := editorleaf.NewSession("Switch buffer to: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 				pm.SetItems(updateItems(miniEditor.GetString())) // here, need first layout drawing.
 
 				KeysetMinibufferCommon(km, miniEditor)
@@ -296,12 +297,12 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 
 		currentPath := editor.GetPath()
 		newPath := ""
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			return
 		}
 
-		mbSession := gecore.NewSession("File to save in: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+		mbSession := editorleaf.NewSession("File to save in: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 			// 最初にデフォルトキーをマッピングする
 			KeysetMinibufferCommon(km, miniEditor)
 
@@ -361,7 +362,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 		)
 
 		// Minibuffer
-		mb := gecore.MinibufferManager()
+		mb := editorleaf.MinibufferManager()
 		// Popupmenu
 		pm := manager.NewPopupmenuManager()
 
@@ -495,7 +496,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *gecore.Editorleaf) {
 		pm.Start(pmSession)
 
 		if !mb.IsActive() {
-			mbSession := gecore.NewSession("Find file: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+			mbSession := editorleaf.NewSession("Find file: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 				// here, need first layout drawing.
 				updateBuffers("")
 				updateItems("")

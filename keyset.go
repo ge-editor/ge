@@ -6,6 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 
+	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/killbuffer"
 	"github.com/ge-editor/gecore/mode"
@@ -20,21 +21,21 @@ func init() {
 	// Initialize keyboard macro
 	// macroKey = keychord.NewRootNode()
 	// macroModeManager = mode.NewManager(macroKey)
-	gecore.MacroMode = gecore.NewMacroMode(gecore.MacroModeManager, func(km *keychord.RootNode, vm *gecore.MacroModeStruct) {
+	macroMode = gecore.NewMacroMode(macroModeManager, func(km *keychord.RootNode, vm *gecore.MacroModeStruct) {
 		km.Bind("e").Do(vm.Replay)
-	}, gecore.Dispatch)
+	}, dispatch)
 
 	// Universal Cancel
-	gecore.CancelKeyOnly.Bind("Ctrl+G").Do(func() {
+	cancelKeyOnly.Bind("Ctrl+G").Do(func() {
 		// gelog.Info("Universal Cancel")
 
 		// Keyboard macro mode
-		gecore.MacroMode.AbortRecording()
-		gecore.MacroModeManager.CancelAll()
+		macroMode.AbortRecording()
+		macroModeManager.CancelAll()
 
 		// Modes
 		// modeManager.Cancel()
-		gecore.ModeManager.CancelAll()
+		modeManager.CancelAll()
 
 		// gecore.CancelManager().CancelTop()
 		gecore.CancelManager().CancelAll()
@@ -56,12 +57,12 @@ func init() {
 	//         editorleaf/editorleaf.go  (register to quitguard manager)
 	//           editorleaf/quitguard.go
 	quittingModeFactory := func() mode.Mode {
-		return modes.NewQuittingMode(gecore.ModeManager, func(qmKey *keychord.RootNode, qm *modes.QuittingMode) {
+		return modes.NewQuittingMode(modeManager, func(qmKey *keychord.RootNode, qm *modes.QuittingMode) {
 
 		})
 	}
-	gecore.RootKey.Bind("Ctrl+X", "Ctrl+C").Do(func() {
-		gecore.ModeManager.Push(quittingModeFactory())
+	rootKey.Bind("Ctrl+X", "Ctrl+C").Do(func() {
+		modeManager.Push(quittingModeFactory())
 		// gecore.Echo.AddText("In quitting mode")
 	})
 
@@ -69,18 +70,18 @@ func init() {
 	// 	- Redraw Screen and
 	//  - Editorleaf Center view on line containing cursor
 	// Bind.DoAlso
-	gecore.RootKey.Bind("Ctrl+L").DoAlso(func() {
+	rootKey.Bind("Ctrl+L").DoAlso(func() {
 		overlay.OverlayManager().Draw(Screen.Screen)
 	})
 
-	gecore.RootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })
+	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })
 
-	gecore.RootKey.Bind("Esc", "x").Do(func() {
-		mb := gecore.MinibufferManager()
+	rootKey.Bind("Esc", "x").Do(func() {
+		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			return
 		}
-		mbSession := gecore.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *gecore.Editorleaf) {
+		mbSession := editorleaf.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 			// 最初にデフォルトキーをマッピングする
 			KeysetMinibufferCommon(km, miniEditor)
 
@@ -90,7 +91,7 @@ func init() {
 
 				var s strings.Builder
 				s.WriteString("Editorleaf.BufferSets:\n")
-				for i, bs := range *gecore.BufferSets {
+				for i, bs := range *editorleaf.BufferSets {
 					s.WriteString(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
 						bs.GetPath(), len(bs.GetMetas())))
 				}
@@ -103,25 +104,25 @@ func init() {
 	})
 
 	// Keyboard macro
-	gecore.MacroKey.Bind("Ctrl+X", "(").Do(func() {
-		gecore.MacroMode.StartRecording()
+	macroKey.Bind("Ctrl+X", "(").Do(func() {
+		macroMode.StartRecording()
 		gecore.Echo.AddText("Defining keyboard macro...")
 	})
-	gecore.MacroKey.Bind("Ctrl+X", ")").Do(func() {
-		gecore.MacroMode.StopRecording()
+	macroKey.Bind("Ctrl+X", ")").Do(func() {
+		macroMode.StopRecording()
 		// gecore.Echo.AddText("Ignore empty macro")
 		gecore.Echo.AddText("Keyboard macro defined")
 	})
-	gecore.MacroKey.Bind("Ctrl+X", "e").Do(func() {
-		gecore.MacroModeManager.Push(gecore.MacroMode)
+	macroKey.Bind("Ctrl+X", "e").Do(func() {
+		macroModeManager.Push(macroMode)
 		gecore.Echo.AddText("(Type e to repeat macro)")
 	})
 
 	// OpMode ウインドウ分割操作モード
 	// Operation mode
-	gecore.RootKey.Bind("Ctrl+X", "o").Do(tree.ActiveTreeGet().NextInCycle)
+	rootKey.Bind("Ctrl+X", "o").Do(tree.ActiveTreeGet().NextInCycle)
 	leafOpModeFactory := func() mode.Mode {
-		return modes.NewLeafOpMode(gecore.ModeManager, `1234567890acdefgijmnpquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
+		return modes.NewLeafOpMode(modeManager, `1234567890acdefgijmnpquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
 			root.Bind("h").Do(vm.SplitHorizontally)
 			root.Bind("v").Do(vm.SplitVertically)
 			root.Bind("k").Do(vm.Remove)
@@ -146,8 +147,8 @@ func init() {
 			})
 		})
 	}
-	gecore.RootKey.Bind("Ctrl+X", "Ctrl+W").Do(func() {
-		gecore.ModeManager.Push(leafOpModeFactory())
+	rootKey.Bind("Ctrl+X", "Ctrl+W").Do(func() {
+		modeManager.Push(leafOpModeFactory())
 	})
 
 }

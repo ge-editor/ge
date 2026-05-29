@@ -5,10 +5,12 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 
+	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
+	"github.com/ge-editor/gelog"
 )
 
 var (
@@ -37,7 +39,7 @@ func main() {
 
 	// Register Overlay Manager
 	overlay.OverlayManager().SetTree(tree.GetRootTree())
-	overlay.OverlayManager().SetMinibuffer(gecore.MinibufferManager())
+	overlay.OverlayManager().SetMinibuffer(editorleaf.MinibufferManager())
 	overlay.OverlayManager().SetEcho(gecore.Echo)
 
 	// Register Cancel Manager
@@ -65,12 +67,19 @@ func mainLoop() {
 	}
 }
 
+func beforeQuit() {
+	if err := gecore.StateSave(); err != nil {
+		gelog.Error(err.Error())
+	}
+}
+
 func consumeMoreEvents() bool {
 	for {
 		select {
 		case ev := <-tcellEvent:
 			event(ev)
 		case <-quit:
+			beforeQuit()
 			return true
 		default:
 			return false
@@ -101,8 +110,8 @@ func draw() {
 
 	overlay.OverlayManager().Draw(Screen.Screen)
 
-	if gecore.ModeManager.IsInMode() {
-		gecore.ModeManager.CurrentMode().Draw()
+	if modeManager.IsInMode() {
+		modeManager.CurrentMode().Draw()
 	}
 }
 
@@ -119,7 +128,7 @@ func event(tev tcell.Event) {
 		// tree.GetRootTree().Resize(rect) // R1
 	case *tcell.EventKey:
 		// macroMode.Append(*ev)
-		gecore.Dispatch(*ev)
+		dispatch(*ev)
 	}
 	// tree.GetRootTree().Event(tev)
 }

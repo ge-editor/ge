@@ -4,6 +4,7 @@ go 1.25.5
 
 require (
 	github.com/gdamore/tcell/v3 v3.4.0
+	github.com/ge-editor/editorleaf v0.0.0-00010101000000-000000000000
 	github.com/ge-editor/gecore v0.1.1
 	github.com/ge-editor/gelog v0.1.1
 	github.com/ge-editor/keychord v0.1.1
