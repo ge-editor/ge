@@ -27,7 +27,11 @@
 
 This text editor project is inspired by Godit (https://github.com/nsf/godit).
 
+---
+
 ## Components
+
+editorleaf package:
 
 ge package:
 
@@ -64,6 +68,43 @@ theme package:
 utils package
 
 - Utility functions
+
+## Packages Dependencies
+
+- ge
+	- editorleaf
+		- gecore
+			- gelog		(No dependencies)
+			- keychord
+				- gelog	(No dependencies)
+			- locale	(No dependencies)
+			- theme		(No dependencies)
+			- utils		(No dependencies)
+		- gelog			(No dependencies)
+		- keychord
+			- gelog	(No dependencies)
+		- locale	(No dependencies)
+		- theme		(No dependencies)
+		- utils		(No dependencies)
+	- gecore
+		- gelog		(No dependencies)
+		- keychord
+			- gelog	(No dependencies)
+		- locale	(No dependencies)
+		- theme		(No dependencies)
+		- utils		(No dependencies)
+	- gelog			(No dependencies)
+	- keychord
+		- gelog		(No dependencies)
+	- language
+		- gecore
+			- gelog		(No dependencies)
+			- keychord
+				- gelog	(No dependencies)
+			- locale	(No dependencies)
+			- theme		(No dependencies)
+			- utils		(No dependencies)
+	- utils				(No dependencies)
 
 ---
 

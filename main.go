@@ -48,7 +48,7 @@ func main() {
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(fmt.Sprintf("ge 0.1.0-dev - build %s, commit %s", buildTime, gitCommit))
+	gecore.Echo.AddText(fmt.Sprintf("ge 0.1.1-dev - build %s, commit %s", buildTime, gitCommit))
 
 	mainLoop()
 }
