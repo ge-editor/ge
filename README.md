@@ -122,6 +122,16 @@ $ cd ge
 $ make
 ```
 
+Known good version:
+
+```txt
+github.com/gdamore/tcell/v3 v3.4.0
+```
+
+Later versions (e.g. `v3.4.4`) may occasionally miss the first keystroke immediately after startup.
+
+---
+
 ## Usage
 
 After installing ge, you can start it by running the ge command in your terminal.
@@ -187,8 +197,8 @@ After installing ge, you can start it by running the ge command in your terminal
 | \<end>              | Move cursor to the end of line
 | C-a                 | Move cursor to the beginning of the logical line
 | \<home>             | Move cursor to the beginning of the line
-| C-v, \<pgdn>        | Move view forward (half of the screen)
-| M-v, \<pgup>        | Move view backward (half of the screen)
+| C-v, \<PageDown>    | Move view forward (half of the screen)
+| M-v, \<PageUp>      | Move view backward (half of the screen)
 | ESC \>              | Move cursor to the end of file
 | ESC \<              | Move cursor to the beginning of the file
 | C-l                 | Center view on line containing cursor
