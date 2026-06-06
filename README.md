@@ -9,102 +9,48 @@
 
 ## Features
 
-- Emacs-like text editor
+- Emacs-like text editor experience
+- Lightweight and responsive
 - Easy-to-use interface
-- Basic text editing functionalities
+- Basic text editing capabilities
 - Customizable themes
+- Portable design, including the build environment
 
-## Goals
+## Planned Features
 
-- Compact design
-- Responsive performance
-- Portability, including build processes
+### Core Improvements
+- Rendering optimization
+- Functionality and codebase optimization
+- Bug fixes and stability improvements
 
-## Near-Term Goals
+### Editing Features
+- Search and replace
+- Spell checker
+- UTF-8 normalization
+- Syntax highlighting
 
-- Functionality and code optimization
-- Bug resolution
+### Language & File Support
+- Language package support (file type packages)
 
-This text editor project is inspired by Godit (https://github.com/nsf/godit).
+### Additional Features
+- Limited Org-mode support
+- Explorer View (leaf)
 
 ---
 
 ## Components
 
-editorleaf package:
+The editor is designed with a modular package structure.
 
-ge package:
-
-- Entry point
-- Key definitions
-
-gecore package:
-
-- Core functionalities
-- Text editor functionalities
-- Default view in ge (TreeLeaf interface)
-
-gelog package:
-
-- Logging functionalities
-
-keychord package:
-
-- Key binding management functionalities
-
-language package:
-
-- Support file types
-
-locale package:
-
-- Support languages
-
-theme package:
-
-- Color definitions
-- Mark character definitions
-
-utils package
-
-- Utility functions
-
-## Packages Dependencies
-
-- ge
-	- editorleaf
-		- gecore
-			- gelog		(No dependencies)
-			- keychord
-				- gelog	(No dependencies)
-			- locale	(No dependencies)
-			- theme		(No dependencies)
-			- utils		(No dependencies)
-		- gelog			(No dependencies)
-		- keychord
-			- gelog	(No dependencies)
-		- locale	(No dependencies)
-		- theme		(No dependencies)
-		- utils		(No dependencies)
-	- gecore
-		- gelog		(No dependencies)
-		- keychord
-			- gelog	(No dependencies)
-		- locale	(No dependencies)
-		- theme		(No dependencies)
-		- utils		(No dependencies)
-	- gelog			(No dependencies)
-	- keychord
-		- gelog		(No dependencies)
-	- language
-		- gecore
-			- gelog		(No dependencies)
-			- keychord
-				- gelog	(No dependencies)
-			- locale	(No dependencies)
-			- theme		(No dependencies)
-			- utils		(No dependencies)
-	- utils				(No dependencies)
+- `editorleaf` — editor UI and view handling
+- `ge` — Entry point and key definitions
+- `gelog` — logging
+- `gecore` — core editor logic and text processing
+- `keychord` — keyboard input and key sequences
+- `language` — language/file-type specific support
+- `locale` — localization support
+- `theme` — theme management
+- `utils` — shared helper utilities
 
 ---
 
@@ -127,8 +73,6 @@ Known good version:
 ```txt
 github.com/gdamore/tcell/v3 v3.4.0
 ```
-
-Later versions (e.g. `v3.4.4`) may occasionally miss the first keystroke immediately after startup.
 
 ---
 
