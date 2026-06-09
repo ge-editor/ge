@@ -4,8 +4,7 @@
 
 ## Recent Work
 
-- Improved line wrapping and forbidden break handling
-- Reviewed and identified issues in key definition methods
+- Added row rendering cache
 
 ## Features
 
