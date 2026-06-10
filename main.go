@@ -53,11 +53,24 @@ func main() {
 	mainLoop()
 }
 
+var firstEvent bool = true
+
 var tcellEvent chan tcell.Event
 
 func mainLoop() {
 	tcellEvent = Screen.EventQ()
 	for ev := range tcellEvent { // イベントチャネルから読み取り
+		if firstEvent {
+			switch e := (ev).(type) {
+			case *tcell.EventResize:
+				gelog.Debug("First Event", "resize", ev)
+			case *tcell.EventKey:
+				firstEvent = false
+				gelog.Debug("First Event", "key", e.Key(), "str", e.Str())
+			default:
+				gelog.Debug("First Event", "default", ev)
+			}
+		}
 		event(ev)
 		if consumeMoreEvents() {
 			break // quit ge-editor
