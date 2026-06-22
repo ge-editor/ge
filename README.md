@@ -4,7 +4,9 @@
 
 ## Recent Work
 
-- Added row rendering cache
+- Added `EventCancelManager` for generation-based event cancellation.
+- Introduced rotating contexts to invalidate stale async draw tasks.
+- Prevented outdated render results from reaching `Screen.Show()`.
 
 ## Features
 
@@ -196,6 +198,7 @@ After installing ge, you can start it by running the ge command in your terminal
 | C-x =               | Info about character under the cursor
 | C-x I               | Insert date
 | C-z                 | Suspend
+| ESC-x               | Execute extended command
 
 ### Keyboard Macro:
 |  key                |  function                             |

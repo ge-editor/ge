@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gdamore/tcell/v3"
@@ -53,30 +54,34 @@ func main() {
 	mainLoop()
 }
 
-var firstEvent bool = true
-
 var tcellEvent chan tcell.Event
+
+func startDraw() {
+	ctx := tree.ECM.Rotate("draw")
+
+	go func(ctx context.Context) {
+		if !draw(ctx) {
+			Screen.Show()
+		}
+
+		/*
+			 		if tree.ECM.IsCanceled(ctx, "draw") {
+						return
+					}
+
+					Screen.Show()
+		*/
+	}(ctx)
+}
 
 func mainLoop() {
 	tcellEvent = Screen.EventQ()
 	for ev := range tcellEvent { // イベントチャネルから読み取り
-		if firstEvent {
-			switch e := (ev).(type) {
-			case *tcell.EventResize:
-				gelog.Debug("First Event", "resize", ev)
-			case *tcell.EventKey:
-				firstEvent = false
-				gelog.Debug("First Event", "key", e.Key(), "str", e.Str())
-			default:
-				gelog.Debug("First Event", "default", ev)
-			}
-		}
 		event(ev)
 		if consumeMoreEvents() {
 			break // quit ge-editor
 		}
-		draw()
-		Screen.Show()
+		startDraw()
 	}
 }
 
@@ -103,29 +108,20 @@ func consumeMoreEvents() bool {
 // debug
 var drawCount int
 
-func draw() {
+func draw(ctx context.Context) bool {
 	// debug
 	gecore.Echo.AddText(fmt.Sprintf("draw %d", drawCount))
 	drawCount += 1
 
-	// tree.GetRootTree().Draw()
-
-	// Extensions must do their Screen.PrintEcho insted of Screen.Echo
-	/*
-		if eventKey.IsExtendedFunctionValid() {
-			(*eventKey.GetExtendedFunctionInterface()).Draw()
-		} else {
-			screen.Get().PrintEcho()
-		}
-	*/
-
-	// manager.Minibuffer().Draw(Screen.Screen)
-
-	overlay.OverlayManager().Draw(Screen.Screen)
+	if overlay.OverlayManager().Draw(Screen.Screen) {
+		return true
+	}
 
 	if modeManager.IsInMode() {
 		modeManager.CurrentMode().Draw()
 	}
+
+	return false
 }
 
 func event(tev tcell.Event) {

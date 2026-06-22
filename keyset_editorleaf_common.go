@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gdamore/tcell/v3"
 	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/mode"
@@ -32,15 +33,34 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 	// Redo Mode
 	redoModeFactory := func() mode.Mode {
 		return modes.NewRedoMode(modeManager, func(rmKey *keychord.RootNode, rm *modes.RedoMode) {
-			rmKey.Bind("/").Do(func() {
-				if editor.IsRedoEmpty() {
-					gecore.Echo.AddText("Redo buffer is empty")
+			/*
+				rmKey.Bind("/").Do(func() {
+					if editor.IsRedoEmpty() {
+						gecore.Echo.AddText("Redo buffer is empty")
+						rm.ModeManager.Cancel()
+						return
+					}
+					editor.Redo()
+					gecore.Echo.AddText("Redo!")
+					gecore.Echo.AddText("(Type / to repeat redo)")
+				})
+			*/
+			rmKey.BindKeyEvent(func(ek tcell.EventKey) (string, keychord.KeyDispatchTransition) {
+				switch ek.Str() {
+				case "/":
+					if editor.IsRedoEmpty() {
+						gecore.Echo.AddText("Redo buffer is empty")
+						rm.ModeManager.Cancel()
+						break
+					}
+					editor.Redo()
+					gecore.Echo.AddText("Redo!")
+					gecore.Echo.AddText("(Type / to repeat redo)")
+				default:
 					rm.ModeManager.Cancel()
-					return
+					gecore.Echo.AddText("Exited redo mode")
 				}
-				editor.Redo()
-				gecore.Echo.AddText("Redo!")
-				gecore.Echo.AddText("(Type / to repeat redo)")
+				return "", keychord.DispatchExecuted
 			})
 		})
 	}
@@ -93,7 +113,7 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 					if err != nil {
 						gelog.Error(err.Error())
 					}
-					editor.MoveCursorToLine(i)
+					editor.MoveCursorGoToLine(i)
 					mbManager.Close()
 				})
 			})

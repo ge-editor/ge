@@ -40,9 +40,9 @@ func init() {
 	tree.LeafTypes = tree.NewLeafTypes()
 
 	// Register Default User View
-	err := tree.LeafTypes.Register("editorleaf", func() tree.LeafType {
+	err := tree.LeafTypes.Register(func() tree.LeafType {
 		return editorleaf.NewLeafType(KeysetEditorleaf)
-	}, 0)
+	}, 0, "editorleaf")
 	if err != nil {
 		gelog.Error("LeafType already registered", "err", err)
 	}
