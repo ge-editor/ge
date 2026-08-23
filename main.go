@@ -137,6 +137,9 @@ func event(tev tcell.Event) {
 		// tree.GetRootTree().Resize(rect) // R1
 	case *tcell.EventKey:
 		// macroMode.Append(*ev)
+
+		// gelog.Debug("tcell", "EventKey", fmt.Sprintf("Key=%v Rune=%q Mod=%v\n", ev.Key(), ev.Str(), ev.Modifiers()))
+
 		dispatch(*ev)
 	}
 	// tree.GetRootTree().Event(tev)

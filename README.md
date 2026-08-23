@@ -4,6 +4,7 @@
 
 ## Recent Work
 
+- Fix dirty flag handling at the save/edit boundary in undo/redo buffer.
 - Added `EventCancelManager` for generation-based event cancellation.
 - Introduced rotating contexts to invalidate stale async draw tasks.
 - Prevented outdated render results from reaching `Screen.Show()`.
