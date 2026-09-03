@@ -40,7 +40,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 			// このセッション専用のキーをマッピングする
 			km.Bind("Enter").Do(func() {
-				text := string(mb.GetBytes())
+				bytes, _, _ := mb.GetBytes()
+				text := string(bytes)
 				editor.CommandPalette(text)
 				gecore.Echo.AddText("Command: " + text)
 				mb.Close()
@@ -81,7 +82,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			})
 
 			km.Bind("Enter").Do(func() {
-				text := string(mb.GetBytes())
+				bytes, _, _ := mb.GetBytes()
+				text := string(bytes)
 				ctx, _ := context.WithCancel(context.Background())
 				editor.SearchText(text, false, false, ctx)
 			})
@@ -156,7 +158,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		}
 
 		updateItems := func() []string {
-			marks = editor.FilterByCharacters(mb.GetString())
+			bytes, _, _ := mb.GetBytes()
+			text := string(bytes)
+			marks = editor.FilterByCharacters(text)
 			items := []string{}
 			for _, m := range marks {
 				items = append(items, fmt.Sprintf("%s %s", m.File.GetBase(), m.Content))
@@ -274,14 +278,20 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 		if !mb.IsActive() {
 			mbSession := editorleaf.NewSession("Switch buffer to: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
-				pm.SetItems(updateItems(miniEditor.GetString())) // here, need first layout drawing.
+				bytes, _, _ := mb.GetBytes()
+				text := string(bytes)
+				pm.SetItems(updateItems(text)) // here, need first layout drawing.
 
 				KeysetMinibufferCommon(km, miniEditor)
 				bindPmKeymap(km, pm.Popupmenu())
 			})
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
-				pm.SetItems(updateItems(mb.GetString()))
+				bytes, _, _ := mb.GetBytes()
+				text := string(bytes)
+				pm.SetItems(updateItems(text))
 			})
+
+			// SetBytes は挙動が異常
 			mb.SetBytes([]byte{}) // Clear minibuffer content
 		}
 	})
@@ -309,7 +319,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			// このセッション専用のキーをマッピングする
 			km.Bind("Enter").Do(func() {
 				state.IfActive(InputMinibuffer, func() {
-					newPath = mb.GetString()
+					bytes, _, _ := mb.GetBytes()
+					newPath := string(bytes)
 					if utils.SameFile(currentPath, newPath) {
 						mb.Close()
 						return
@@ -438,7 +449,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 				if pm.IsActive() {
 					index, _ := pm.GetItem()
-					dir := mb.GetString()
+					bytes, _, _ := mb.GetBytes()
+					dir := string(bytes)
 					base := items[index]
 					path := filepath.Join(dir, base)
 					info, err := os.Stat(path)
@@ -463,7 +475,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					}
 					mb.Editor().MoveCursorEndOfLine()
 				} else {
-					path := mb.GetString()
+					bytes, _, _ := mb.GetBytes()
+					path := string(bytes)
 					info, err := os.Stat(path)
 					if errors.Is(err, os.ErrNotExist) {
 						gecore.Echo.AddText("New file: " + path)
@@ -505,7 +518,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				bindPmKeymap(km, pm.Popupmenu())
 			})
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
-				path := mb.GetString()
+				bytes, _, _ := mb.GetBytes()
+				path := string(bytes)
 				info, err := os.Stat(path)
 				if errors.Is(err, os.ErrNotExist) {
 					updateBuffers(filepath.Dir(path))
@@ -536,7 +550,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					updateItems("")
 				}
 			})
-			mb.SetString("") // Clear minibuffer content
+			// フォーカスが壊れる
+			// mb.SetString("") // Clear minibuffer content
 		}
 	})
 

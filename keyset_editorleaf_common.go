@@ -108,7 +108,8 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 
 				// このセッション専用のキーをマッピングする
 				km.Bind("Enter").Do(func() {
-					text := string(mbManager.GetBytes())
+					bytes, _, _ := mbManager.GetBytes()
+					text := string(bytes)
 					i, err := strconv.Atoi(text)
 					if err != nil {
 						gelog.Error(err.Error())

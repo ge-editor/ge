@@ -125,6 +125,12 @@ func draw(ctx context.Context) bool {
 }
 
 func event(tev tcell.Event) {
+	/* gelog.Debug("EVENT",
+		"type", fmt.Sprintf("%T", tev),
+		"event", fmt.Sprintf("%v", tev),
+	)
+	*/
+
 	switch ev := (tev).(type) {
 	// case *tcell.EventInterrupt:
 	// 	gelog.Info("EventInterrupt")
@@ -141,6 +147,17 @@ func event(tev tcell.Event) {
 		// gelog.Debug("tcell", "EventKey", fmt.Sprintf("Key=%v Rune=%q Mod=%v\n", ev.Key(), ev.Str(), ev.Modifiers()))
 
 		dispatch(*ev)
+
+	case *tcell.EventMouse:
+		btn := ev.Buttons()
+		if btn&tcell.WheelDown != 0 {
+			// x, y := ev.Position()
+			_, y := ev.Position()
+			gelog.Debug("Mouse", "y", y)
+			// マウスホイール下回転処理
+			// -> 画面の表示開始行（ScrollTop）を +1〜3 行動かす
+			// x, y := ev.Position() を使ってマウスカーソル下の要素だけスクロールさせることも可能
+		}
+	default:
 	}
-	// tree.GetRootTree().Event(tev)
 }

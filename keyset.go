@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell/v3"
 
@@ -76,6 +75,36 @@ func init() {
 
 	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })
 
+	/*
+		// TEST
+		rootKey.Bind("Esc", "x").Do(func() {
+			mb := editorleaf.MinibufferManager()
+			if mb.IsActive() {
+				return
+			}
+			mbSession := editorleaf.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
+				// 最初にデフォルトキーをマッピングする
+				KeysetMinibufferCommon(km, miniEditor)
+
+				// このセッション専用のキーをマッピングする
+				km.Bind("a").Do(func() {
+					bytes, _, _ := mb.GetBytes()
+					mb.SetString(string(bytes) + "a")
+				})
+				km.Bind("b").Do(func() {
+					bytes, _, _ := mb.GetBytes()
+					mb.SetString(string(bytes) + "b")
+				})
+				km.Bind("Enter").Do(func() {
+					bytes, _, _ := mb.GetBytes()
+					gecore.Echo.AddText("ESC-X: " + string(bytes))
+					mb.Close()
+				})
+			})
+			mb.Start(mbSession, nil)
+		})
+	*/
+
 	rootKey.Bind("Esc", "x").Do(func() {
 		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
@@ -87,16 +116,21 @@ func init() {
 
 			// このセッション専用のキーをマッピングする
 			km.Bind("Enter").Do(func() {
-				gecore.Echo.AddText("ESC-X: " + mb.GetString())
-
-				var s strings.Builder
-				s.WriteString("Editorleaf.BufferSets:\n")
-				for i, bs := range *editorleaf.BufferSets {
-					s.WriteString(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
+				bytes, _, _ := mb.GetBytes()
+				gecore.Echo.AddText("ESC-X: " + string(bytes))
+				// var s strings.Builder
+				// s.WriteString("Editorleaf.BufferSets:\n")
+				l := len(*editorleaf.BufferSets)
+				s := make([][]byte, l+1)
+				s[0] = []byte("Editorleaf.BufferSets:")
+				for i := 0; i < l; i++ { // , bs := range *editorleaf.BufferSets {
+					bs := (*editorleaf.BufferSets)[i]
+					s[i+1] = []byte(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
 						bs.GetPath(), len(bs.GetMetas())))
+					//s.WriteString(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
+					//	bs.GetPath(), len(bs.GetMetas())))
 				}
-				killbuffer.KillBuffer.PushKillBuffer([]byte(s.String()))
-
+				killbuffer.KillBuffer.PushKillBuffer(s, []byte{'\n'})
 				mb.Close()
 			})
 		})
