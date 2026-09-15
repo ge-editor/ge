@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/gdamore/tcell/v3"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
-	"github.com/ge-editor/theme"
 )
 
 var (
@@ -59,31 +57,27 @@ func main() {
 var tcellEvent chan tcell.Event
 
 func startDraw() {
-	screen.Get().SetContent(Screen.Width-1, Screen.Height-1, ' ', nil, theme.ColorDefault)
 	ctx := tree.ECM.Rotate("draw")
 
 	go func(ctx context.Context) {
 		if !draw(ctx) {
 			Screen.Show()
 		}
+
 		/*
-			if tree.ECM.IsCanceled(ctx, "draw") {
-				return
-			}
+			 		if tree.ECM.IsCanceled(ctx, "draw") {
+						return
+					}
 
-			Screen.Show()
+					Screen.Show()
 		*/
-
-		// Restore the editor's default foreground and background colors
-		// for IME preedit rendering.
-		theme.RestoreTerminalAttributes()
 	}(ctx)
 }
 
 func mainLoop() {
 	tcellEvent = Screen.EventQ()
-	for tev := range tcellEvent { // イベントチャネルから読み取り
-		event(tev)
+	for ev := range tcellEvent { // イベントチャネルから読み取り
+		event(ev)
 		if consumeMoreEvents() {
 			break // quit ge-editor
 		}
@@ -97,7 +91,6 @@ func beforeQuit() {
 	}
 }
 
-/*
 func consumeMoreEvents() bool {
 	for {
 		select {
@@ -107,37 +100,6 @@ func consumeMoreEvents() bool {
 			beforeQuit()
 			return true
 		default:
-			return false
-		}
-	}
-}
-*/
-
-func consumeMoreEvents() bool {
-
-	// Keep consuming events while they continue to arrive.
-	// Return when no event arrives within the timeout.
-	// timer := time.NewTimer(10 * time.Millisecond)
-	timer := time.NewTimer(16 * time.Millisecond)
-	defer timer.Stop()
-
-	for {
-		select {
-		case ev := <-tcellEvent:
-			event(ev)
-			if !timer.Stop() {
-				select {
-				case <-timer.C:
-				default:
-				}
-			}
-			timer.Reset(1 * time.Millisecond)
-
-		case <-quit:
-			beforeQuit()
-			return true
-
-		case <-timer.C:
 			return false
 		}
 	}
@@ -170,15 +132,20 @@ func event(tev tcell.Event) {
 	*/
 
 	switch ev := (tev).(type) {
-	case *tcell.EventInterrupt:
-		gelog.Info("EventInterrupt")
-		gecore.Echo.AddText("Interrupt")
-
+	// case *tcell.EventInterrupt:
+	// 	gelog.Info("EventInterrupt")
 	case *tcell.EventResize:
 		overlay.OverlayManager().Resize(*ev)
-		Screen.Resize(ev.Size())
 
+		Screen.Resize(ev.Size())
+		// rect := Screen.RootRect() // without minibuffer/echo
+		// gelog.Info("EventResize", ev, "rect", rect)
+		// tree.GetRootTree().Resize(rect) // R1
 	case *tcell.EventKey:
+		// macroMode.Append(*ev)
+
+		// gelog.Debug("tcell", "EventKey", fmt.Sprintf("Key=%v Rune=%q Mod=%v\n", ev.Key(), ev.Str(), ev.Modifiers()))
+
 		dispatch(*ev)
 
 	case *tcell.EventMouse:
@@ -191,7 +158,6 @@ func event(tev tcell.Event) {
 			// -> 画面の表示開始行（ScrollTop）を +1〜3 行動かす
 			// x, y := ev.Position() を使ってマウスカーソル下の要素だけスクロールさせることも可能
 		}
-
 	default:
 	}
 }

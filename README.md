@@ -4,25 +4,12 @@
 
 ## Recent Work
 
-go: downgraded github.com/gdamore/tcell/v3 v3.4.2 => v3.4.0
-v3.4.0
-
-v3.4.2 に更新すると、
-screen.EnableMouse() におけるイベント送信の挙動が v3.4.0 とは全く違う。
-
-- v3.4.0 v3.4.2 ともに
-    - Ctrl+X と ESC の入力では ESC は届くのが遅い
-
-- v3.4.2
-    - screen.EnableMouse() 設定した状態：
-        - マウスのホイール操作で v3.4.0 とは比べ物にならない数のイベントが送信されてくる
-        - マウスカーソルがコンソール画面を横切るとカーソル位置情報のイベントが送信されてくる
-          v3.4.0 では送信されてこない。
-    - screen.EnableMouse() に関係なく：
-        モードに入り、minibuffer カーソルで文字を入力すると、一文字目は画面に描画
-
-- Undo/Redo の再実装
+- search
+- highlighter 実装しなおし
+- event 処理の見直し, minibuffer bug 修正, echo line bug 修正, echo line を常に表示するよう変更
+- tcell マウスイベントの有効化
 - Version up 3.4.0 to 3.4.2 github.com/gdamore/tcell/v3
+- Undo/Redo の実装しなおし
 - Fix dirty flag handling at the save/edit boundary in undo/redo buffer.
 - Added `EventCancelManager` for generation-based event cancellation.
 - Introduced rotating contexts to invalidate stale async draw tasks.
@@ -92,7 +79,7 @@ $ make
 Known good version:
 
 ```txt
-github.com/gdamore/tcell/v3 v3.4.0
+github.com/gdamore/tcell/v3 v3.4.2
 ```
 
 ---

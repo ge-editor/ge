@@ -196,7 +196,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					gecore.Echo.AddText(result.String())
 					editor.OpenFile(file.GetPath())
 				}
-				editor.SetCursor(mark.Cursor)
+				editor.SetRowsPos(mark.RowsPos)
 				close()
 			})
 		}
