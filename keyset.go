@@ -70,7 +70,7 @@ func init() {
 	//  - Editorleaf Center view on line containing cursor
 	// Bind.DoAlso
 	rootKey.Bind("Ctrl+L").DoAlso(func() {
-		overlay.OverlayManager().Draw(Screen.Screen)
+		overlay.OverlayManager().Draw()
 	})
 
 	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })

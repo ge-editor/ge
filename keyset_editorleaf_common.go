@@ -19,7 +19,7 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 
 	editorKey.Bind("Ctrl+L").Do(func() {
 		editor.Recenter()
-		overlay.OverlayManager().Draw(Screen.Screen)
+		overlay.OverlayManager().Draw()
 		gecore.Echo.AddText("")
 	})
 

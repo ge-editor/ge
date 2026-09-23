@@ -48,10 +48,15 @@ func main() {
 	// Register Cancel Manager
 	// gecore.CancelManager().Register(manager.MinibufferManager())
 
+	// Register key dispatch pipeline layers (see key_dispatcher.go).
+	// keyset.go の init() で macroMode が設定済みであることが前提のため、
+	// (全 init() 完了後に実行される) main() の中で呼ぶ。
+	initKeyLayers()
+
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(fmt.Sprintf("ge 0.1.4-dev - build %s, commit %s", buildTime, gitCommit))
+	gecore.Echo.AddText(fmt.Sprintf("ge v0.1.5-dev - build %s, commit %s", buildTime, gitCommit))
 
 	mainLoop()
 }
@@ -59,7 +64,7 @@ func main() {
 var tcellEvent chan tcell.Event
 
 func startDraw() {
-	screen.Get().SetContent(Screen.Width-1, Screen.Height-1, ' ', nil, theme.ColorDefault)
+	// screen.Get().SetContent(Screen.Width-1, Screen.Height-1, ' ', nil, theme.ColorDefault)
 	ctx := tree.ECM.Rotate("draw")
 
 	go func(ctx context.Context) {
@@ -151,7 +156,7 @@ func draw(ctx context.Context) bool {
 	gecore.Echo.AddText(fmt.Sprintf("draw %d", drawCount))
 	drawCount += 1
 
-	if overlay.OverlayManager().Draw(Screen.Screen) {
+	if overlay.OverlayManager().Draw( /* Screen.Screen */ ) {
 		return true
 	}
 

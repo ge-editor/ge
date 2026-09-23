@@ -4,12 +4,13 @@
 
 ## Recent Work
 
-- search
-- highlighter 実装しなおし
-- event 処理の見直し, minibuffer bug 修正, echo line bug 修正, echo line を常に表示するよう変更
-- tcell マウスイベントの有効化
-- Version up 3.4.0 to 3.4.2 github.com/gdamore/tcell/v3
-- Undo/Redo の実装しなおし
+- Refactor key event dispatch pipeline into key layers
+- Unified **Mark (C-space)** across all leaf types.
+- **Search** is being reworked.
+- **Highlighter** has been reimplemented.
+- Reviewed **event handling**; fixed minibuffer and echo-line bugs, and changed the echo line to remain visible at all times.
+- Enabled **tcell mouse events**.
+- **Undo/Redo** has been reimplemented.
 - Fix dirty flag handling at the save/edit boundary in undo/redo buffer.
 - Added `EventCancelManager` for generation-based event cancellation.
 - Introduced rotating contexts to invalidate stale async draw tasks.
@@ -79,7 +80,7 @@ $ make
 Known good version:
 
 ```txt
-github.com/gdamore/tcell/v3 v3.4.2
+github.com/gdamore/tcell/v3 v3.5.0
 ```
 
 ---
@@ -179,7 +180,7 @@ After installing ge, you can start it by running the ge command in your terminal
 |---------------------|---------------------------------------|
 | C-@, C-\<space>     | Set mark
 | C-x C-x             | Swap cursor and mark locations
-| M-u                 | Open mark list
+| M-u                 | Open Mark list and jump to a Mark
 | ~~C-x > (>...)~~    | ~~Indent region (lines between the cursor and the mark)~~
 | ~~C-x \< (\<...)~~  | ~~Outdent region (lines between the cursor and the mark)~~
 | ~~C-x C-r~~         | ~~Search & replace (within region) [prompt]~~

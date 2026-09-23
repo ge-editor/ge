@@ -1,12 +1,12 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v3"
 
@@ -62,6 +62,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 	// import
 	// Session (gecore.Session) からは UI の状態を見てはいけない
 	km.Bind("Ctrl+S").Do(func() {
+		var currentText string
+		var debounceTimer *time.Timer
+
 		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			// すでに minibuffer がアクティブなら何もしない
@@ -81,21 +84,38 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				editor.MovePrevFoundWord()
 			})
 
-			km.Bind("Enter").Do(func() {
-				bytes, _, _ := mb.GetBytes()
-				text := string(bytes)
-				ctx, _ := context.WithCancel(context.Background())
-				editor.SearchText(text, false, false, ctx)
-			})
-
 			/*
-				km.Bind("Esc").Do(func() {
-					manager.Close()
+				km.Bind("Enter").Do(func() {
+					bytes, _, _ := mb.GetBytes()
+					text := string(bytes)
+					ctx, _ := context.WithCancel(context.Background())
+					editor.SearchText(text, false, false, ctx)
 				})
 			*/
+
 		})
 
-		mb.Start(mbSession, nil)
+		mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
+			bytes, _, _ := mb.GetBytes()
+			// gecore.Echo.AddText(string(bytes))
+			text := string(bytes)
+			if currentText == text {
+				return
+			}
+			currentText = text
+
+			// すでに走っているタイマーがあればキャンセル
+			if debounceTimer != nil {
+				debounceTimer.Stop()
+			}
+			// 160ミリ秒以内に新しい入力がなければ実行
+			debounceTimer = time.AfterFunc(160*time.Millisecond, func() {
+				// ctx, _ := context.WithCancel(context.Background())
+				editor.SearchText(text, false, false /* , ctx */)
+			})
+		})
+
+		mb.SetBytes([]byte(currentText))
 	})
 
 	km.Bind("Ctrl+X", "k").Do(func() {
@@ -163,7 +183,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			marks = editor.FilterByCharacters(text)
 			items := []string{}
 			for _, m := range marks {
-				items = append(items, fmt.Sprintf("%s %s", m.File.GetBase(), m.Content))
+				items = append(items, fmt.Sprintf("%s %s", m.EditBuffer.GetBase(), m.Label))
 			}
 			pm.SetItems(items)
 			return items
@@ -184,12 +204,12 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				}
 				mark := marks[index]
 
-				if utils.SameFile(editor.GetPath(), mark.File.GetPath()) {
+				if utils.SameFile(editor.GetPath(), mark.EditBuffer.GetPath()) {
 					// Set mark to Editor.mark if same the file
-					editor.SetCurrentMark(mark)
+					editor.MoveToMarkPosition(mark)
 				} else {
 					// Change the edit buffer
-					file, _, result, err := editorleaf.BufferSets.GetFileAndMeta(mark.File.GetPath())
+					file, _, result, err := editorleaf.BufferSets.GetFileAndMeta(mark.EditBuffer.GetPath())
 					if err != nil {
 						gecore.Echo.AddText(err.Error())
 					}
@@ -291,7 +311,6 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				pm.SetItems(updateItems(text))
 			})
 
-			// SetBytes は挙動が異常
 			mb.SetBytes([]byte{}) // Clear minibuffer content
 		}
 	})
@@ -550,8 +569,12 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					updateItems("")
 				}
 			})
-			// フォーカスが壊れる
-			// mb.SetString("") // Clear minibuffer content
+			// 初期値を設定
+			initialString := "esc"
+			mb.SetString(initialString)
+			mb.Editor().MoveCursorEndOfLine()
+			updateItems(initialString)
+			pm.Active(true)
 		}
 	})
 
