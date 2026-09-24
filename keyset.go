@@ -125,8 +125,7 @@ func init() {
 				s[0] = []byte("Editorleaf.BufferSets:")
 				for i := 0; i < l; i++ { // , bs := range *editorleaf.BufferSets {
 					bs := (*editorleaf.BufferSets)[i]
-					s[i+1] = []byte(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
-						bs.GetPath(), len(bs.GetMetas())))
+					s[i+1] = fmt.Appendf(nil, "%d: %s (Metas: %d)\n", i, bs.GetPath(), len(bs.GetMetas()))
 					//s.WriteString(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
 					//	bs.GetPath(), len(bs.GetMetas())))
 				}

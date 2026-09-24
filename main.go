@@ -56,7 +56,7 @@ func main() {
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(fmt.Sprintf("ge v0.1.5-dev - build %s, commit %s", buildTime, gitCommit))
+	gecore.Echo.AddText(fmt.Sprintf("ge v0.1.6-dev - build %s, commit %s", buildTime, gitCommit))
 
 	mainLoop()
 }
@@ -156,7 +156,7 @@ func draw(ctx context.Context) bool {
 	gecore.Echo.AddText(fmt.Sprintf("draw %d", drawCount))
 	drawCount += 1
 
-	if overlay.OverlayManager().Draw( /* Screen.Screen */ ) {
+	if overlay.OverlayManager().Draw() {
 		return true
 	}
 

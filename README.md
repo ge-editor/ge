@@ -4,6 +4,7 @@
 
 ## Recent Work
 
+- Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
 - Refactor key event dispatch pipeline into key layers
 - Unified **Mark (C-space)** across all leaf types.
 - **Search** is being reworked.
