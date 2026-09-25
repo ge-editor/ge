@@ -40,7 +40,7 @@ endif
 TAG ?= debug
 
 # Locale (ja_JP, en_US ...)
-LOCALE ?=
+LOCALE ?= ja_JP
 
 # Build tags (collect only tag names)
 BUILD_TAG_NAMES = $(TAG) $(LOCALE)
