@@ -4,9 +4,8 @@
 
 ## Recent Work
 
+- Fix split-screen operations in mode handling.
 - Fixed highlight handling when a line break is immediately followed by a prohibited line-start character and background handling when the color column limit is exceeded.
-- 折り返した直後が禁則文字だった場合の highlight 処理, Color column limit overflow background の処理を修正
-
 - Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
 - **Search** is being reworked.
 

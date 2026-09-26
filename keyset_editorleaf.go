@@ -570,7 +570,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				}
 			})
 			// 初期値を設定
-			initialString := "esc"
+			initialString := ""
 			mb.SetString(initialString)
 			mb.Editor().MoveCursorEndOfLine()
 			updateItems(initialString)

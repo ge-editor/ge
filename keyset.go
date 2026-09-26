@@ -155,7 +155,7 @@ func init() {
 	// Operation mode
 	rootKey.Bind("Ctrl+X", "o").Do(tree.ActiveTreeGet().NextInCycle)
 	leafOpModeFactory := func() mode.Mode {
-		return modes.NewLeafOpMode(modeManager, `1234567890acdefgijmnpquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
+		return modes.NewLeafOpMode(modeManager, `1234567890acdefgijmnopquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
 			root.Bind("h").Do(vm.SplitHorizontally)
 			root.Bind("v").Do(vm.SplitVertically)
 			root.Bind("k").Do(vm.Remove)
@@ -163,7 +163,7 @@ func init() {
 			root.Bind("r").Do(vm.InsertRight)
 			root.Bind("b").Do(vm.InsertBottom)
 			root.Bind("l").Do(vm.InsertLeft)
-			root.Bind("o").Do(vm.SwitchSplitDirection)
+			root.Bind("s").Do(vm.SwitchSplitDirection)
 			root.Bind("Ctrl+N").Do(vm.NearestVSplitStepResizeIncrement)
 			root.Bind("Down").Do(vm.NearestVSplitStepResizeIncrement)
 			root.Bind("Ctrl+P").Do(vm.NearestVSplitStepResizeDecrement)
