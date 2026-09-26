@@ -4,18 +4,11 @@
 
 ## Recent Work
 
+- Fixed highlight handling when a line break is immediately followed by a prohibited line-start character and background handling when the color column limit is exceeded.
+- 折り返した直後が禁則文字だった場合の highlight 処理, Color column limit overflow background の処理を修正
+
 - Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
-- Refactor key event dispatch pipeline into key layers
-- Unified **Mark (C-space)** across all leaf types.
 - **Search** is being reworked.
-- **Highlighter** has been reimplemented.
-- Reviewed **event handling**; fixed minibuffer and echo-line bugs, and changed the echo line to remain visible at all times.
-- Enabled **tcell mouse events**.
-- **Undo/Redo** has been reimplemented.
-- Fix dirty flag handling at the save/edit boundary in undo/redo buffer.
-- Added `EventCancelManager` for generation-based event cancellation.
-- Introduced rotating contexts to invalidate stale async draw tasks.
-- Prevented outdated render results from reaching `Screen.Show()`.
 
 ## Features
 
