@@ -4,11 +4,11 @@ go 1.26.0
 
 require (
 	github.com/gdamore/tcell/v3 v3.5.0
-	github.com/ge-editor/editorleaf v0.1.9
-	github.com/ge-editor/gecore v0.1.8
+	github.com/ge-editor/editorleaf v0.1.10
+	github.com/ge-editor/gecore v0.1.10
 	github.com/ge-editor/gelog v0.1.8
 	github.com/ge-editor/keychord v0.1.8
-	github.com/ge-editor/language v0.1.8
+	github.com/ge-editor/language v0.1.10
 	github.com/ge-editor/theme v0.1.8
 	github.com/ge-editor/utils v0.1.8
 )

@@ -37,7 +37,8 @@ endif
 
 # Tag (release, develop, debug)
 # TAG ?= release
-TAG ?= debug
+# TAG ?= debug
+TAG ?= "cts cgo debug ja_JP
 
 # Locale (ja_JP, en_US ...)
 LOCALE ?= ja_JP

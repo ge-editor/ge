@@ -14,7 +14,7 @@ import (
 
 var (
 	cancelKeyOnly = keychord.NewRootNode()
-	globalKey     = keychord.NewRootNode() // 現状どこからも Bind されていない予約枠 (下記コメント参照)
+	globalKey     = keychord.NewRootNode()
 	rootKey       = keychord.NewRootNode()
 
 	modeManager = mode.NewManager(rootKey)
@@ -25,26 +25,23 @@ var (
 	macroMode        *gecore.MacroModeStruct
 )
 
-// dispatch は 1 回のキー入力をパイプラインに流す。
+// dispatch sends a single key event through the key dispatch pipeline.
 //
-// 中身は gecore.KeyLayerManager().Dispatch を呼ぶだけになった。
-// 「どのキーがどの優先順位で誰に奪われるか」は initKeyLayers() の
-// gecore.KeyLayerManager().Register(...) の並びを見れば分かる。
+// The pipeline itself is defined by initKeyLayers. Keeping dispatch as a
+// small wrapper makes the dispatch entry point independent of the individual
+// layers.
 //
-// シグネチャ (tcell.EventKey を1つ受け取る) は変更していない。
-// これは macroMode.Replay() がキーボードマクロの再生時に
-// この関数自身を dispatch として呼び直す (NewMacroMode の第3引数) ため。
+// The signature is intentionally kept as a single tcell.EventKey argument.
+// Keyboard macro replay uses this function as its dispatch callback.
 func dispatch(ev tcell.EventKey) {
 	gecore.KeyLayerManager().Dispatch(ev, onKeyStatus)
 }
 
-// onKeyStatus は各レイヤーからの結果を echo 行に反映する。
-// 旧実装の `prefix []string` パッケージグローバル変数が担っていた
-// 副作用をここ1箇所に集約したもの。
+// onKeyStatus updates the echo line with the current key sequence.
 //
-// 各 keychord.RootNode は "C-x" のようなキー状態文字列を内部で
-// 既に蓄積して Dispatch の戻り値として返すため、
-// dispatch() 側で改めて手動集計する必要はない。
+// keychord.RootNode maintains its own key sequence and returns it from
+// Dispatch, so the dispatch layer does not need to maintain a separate
+// prefix buffer.
 func onKeyStatus(l gecore.KeyLayer, status string, res keychord.KeyDispatchTransition) {
 	switch res {
 	case keychord.DispatchPrefix, keychord.DispatchInvalidAfterPrefix:
@@ -54,27 +51,23 @@ func onKeyStatus(l gecore.KeyLayer, status string, res keychord.KeyDispatchTrans
 	}
 }
 
-// initKeyLayers はパイプラインを構成する各レイヤーを登録する。
-// main() から一度だけ呼ぶ。
+// initKeyLayers registers the layers that make up the key dispatch pipeline.
 //
-// 優先順位 (小さいほど先):
+// Layers are evaluated in ascending priority order:
 //
-//	 0  cancel   : Ctrl+G のみ。ヒットしなければ常に下へ流す。
-//	10  macro    : マクロ記録開始/停止/再生キー、および再生待ち中の "e"。
-//	               C-x e e e... と連打してマクロを連続再生できる Emacs 風の
-//	               挙動を壊さないよう、意図的に非排他 (Exclusive=false) にしてある。
-//	20  global   : 現状どのキーも Bind されていない予約枠。
-//	               将来「モードに関係なく常に効く」グローバルキーを
-//	               足したくなったらここに Bind する。
-//	30  minibuffer: ミニバッファがアクティブな間だけ排他 (IsActive() と同期)。
-//	40  mode     : rootKey (何も Push されていない状態) または
-//	               Push されたモード (LeafOpMode/QuittingMode/RedoMode)。
-//	               Push されている間は IsInMode()==true になり排他になる。
-//	               ここが今回のバグ修正点: 以前は Push 中のモードが
-//	               未知キーで NotFound を返しても、そのままリーフの
-//	               自己挿入まで抜けてしまっていた。
-//	50  leaf     : アクティブな Tree Leaf 自身 (最終防衛ライン)。
-//	               ここで初めて自己挿入などのデフォルト処理が行われる。
+//	 0  cancel      Ctrl+G cancellation
+//	10  macro       keyboard macro commands and replay
+//	20  global      keys independent of the current mode
+//	30  minibuffer  minibuffer input while active
+//	40  mode        root and pushed key modes
+//	50  leaf        active leaf's default key handling
+//
+// Non-exclusive layers may pass an unhandled event to the next layer.
+// Exclusive layers prevent the event from reaching subsequent layers,
+// including the leaf layer.
+//
+// The registration order is therefore the central description of the
+// application's key dispatch hierarchy.
 func initKeyLayers() {
 	m := gecore.KeyLayerManager()
 
@@ -110,14 +103,14 @@ type macroLayer struct {
 
 func (l *macroLayer) Name() string    { return "macro" }
 func (l *macroLayer) Active() bool    { return true }
-func (l *macroLayer) Exclusive() bool { return false } // C-x e e e... の連続再生を妨げないため
+func (l *macroLayer) Exclusive() bool { return false }
 func (l *macroLayer) Priority() int   { return 10 }
 
 func (l *macroLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
 	status, res := l.mm.ActiveKeys().Dispatch(ev)
 	if res != keychord.DispatchExecuted {
-		// 消費されなかったキーのみ記録対象として残す。
-		// Append 自体は recording フラグが立っている間だけ効く no-op-safe な呼び出し。
+		// Record only events that were not consumed by the macro keymap.
+		// Append is a no-op when macro recording is inactive.
 		l.macro.Append(ev)
 	}
 	return status, res
@@ -125,12 +118,12 @@ func (l *macroLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTr
 
 // --- layer: global -------------------------------------------------
 
-// globalKeyLayer は「モードに関係なく常に効くべきグローバルキー」用の予約枠。
-// 2026-09 時点では globalKey に Bind している箇所がなく、常に DispatchNotFound
-// を返すだけの層になっている。実質的な全キーは rootKey (modeLayer 側) に
-// 束縛されているため、このレイヤーは現状 no-op。
-// 削除しても挙動は変わらないが、「グローバル」と「モード未 Push 時のデフォルト」
-// を将来分離したくなったときのための置き場として残してある。
+// globalKeyLayer handles key bindings that are independent of the current
+// mode. It is intentionally separate from the mode layer so that global
+// bindings and mode-specific bindings remain distinct.
+//
+// The layer currently has no bindings, but provides a dedicated place for
+// future global key bindings.
 type globalKeyLayer struct {
 	km *keychord.RootNode
 }
@@ -150,21 +143,24 @@ type minibufferLayer struct{}
 
 func (l *minibufferLayer) Name() string { return "minibuffer" }
 func (l *minibufferLayer) Active() bool { return true }
+
 func (l *minibufferLayer) Exclusive() bool {
 	return editorleaf.MinibufferManager().IsActive()
 }
+
 func (l *minibufferLayer) Priority() int { return 30 }
 
 func (l *minibufferLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
 	mb := editorleaf.MinibufferManager()
-	res := mb.Dispatch(ev) // 既存 API: キー状態文字列は返さない
+	res := mb.Dispatch(ev)
 	if res == keychord.DispatchExecuted {
-		overlay.OverlayManager().Layout(screen.Get().Rect) // ミニバッファ高さの再計算
+		// Recalculate the overlay layout when the minibuffer changes.
+		overlay.OverlayManager().Layout(screen.Get().Rect)
 	}
 	return "", res
 }
 
-// --- layer: mode (rootKey / Push されたモード) --------------------------
+// --- layer: mode (rootKey / pushed modes) -----------------------------
 
 type modeLayer struct {
 	mm *mode.Manager
@@ -172,25 +168,28 @@ type modeLayer struct {
 
 func (l *modeLayer) Name() string { return "mode" }
 func (l *modeLayer) Active() bool { return true }
+
 func (l *modeLayer) Exclusive() bool {
-	// スタックに何か Push されている間だけ排他にする。
-	// 何も Push されていない (= rootKey がそのまま active) 間は非排他で、
-	// 通常の編集キーがリーフまで届くようにする。
+	// A pushed mode owns the key event stream exclusively.
+	//
+	// When no mode is pushed, rootKey provides the normal application
+	// keymap and unhandled events may continue to the leaf layer.
 	return l.mm.IsInMode()
 }
+
 func (l *modeLayer) Priority() int { return 40 }
 
 func (l *modeLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
 	return l.mm.ActiveKeys().Dispatch(ev)
 }
 
-// --- layer: leaf (最終防衛ライン) --------------------------------------
+// --- layer: leaf (final dispatch layer) -------------------------------
 
 type leafLayer struct{}
 
 func (l *leafLayer) Name() string    { return "leaf" }
 func (l *leafLayer) Active() bool    { return true }
-func (l *leafLayer) Exclusive() bool { return true } // ここで必ず消費させる (自己挿入含む)
+func (l *leafLayer) Exclusive() bool { return true }
 func (l *leafLayer) Priority() int   { return 50 }
 
 func (l *leafLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
