@@ -168,6 +168,9 @@ func draw(ctx context.Context) bool {
 }
 
 func event(tev tcell.Event) {
+	// treesitter
+	editorleaf.ApplyPendingSyntaxUpdates()
+
 	/* gelog.Debug("EVENT",
 		"type", fmt.Sprintf("%T", tev),
 		"event", fmt.Sprintf("%v", tev),
@@ -178,6 +181,14 @@ func event(tev tcell.Event) {
 	case *tcell.EventInterrupt:
 		gelog.Info("EventInterrupt")
 		gecore.Echo.AddText("Interrupt")
+
+		// treesitter
+		/*
+			if marker, ok := ev.Data().(string); ok && marker == "ge-syntax-update" {
+				gelog.Debug("ge-syntax-update")
+				return
+			}
+		*/
 
 	case *tcell.EventResize:
 		overlay.OverlayManager().Resize(*ev)

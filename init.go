@@ -11,7 +11,7 @@ import (
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/language/fundamental"
-	"github.com/ge-editor/language/go_mode"
+	"github.com/ge-editor/language/mode"
 )
 
 func init() {
@@ -32,7 +32,8 @@ func init() {
 	// Register default lang Mode
 	lang.Modes.Register(fundamental.NewFundamental())
 	// Register lang Mode
-	lang.Modes.Register(go_mode.NewGoMode())
+	lang.Modes.Register(mode.NewGoMode())
+	lang.Modes.Register(mode.NewMarkdownMode())
 
 	// ----------------------------------
 	// tree Leaf

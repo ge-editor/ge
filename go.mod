@@ -20,6 +20,10 @@ require (
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/ge-editor/locale v0.1.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
+	github.com/mattn/go-pointer v0.0.1 // indirect
+	github.com/tree-sitter-grammars/tree-sitter-markdown v0.5.1 // indirect
+	github.com/tree-sitter/go-tree-sitter v0.25.0 // indirect
+	github.com/tree-sitter/tree-sitter-go v0.25.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect

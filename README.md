@@ -4,10 +4,10 @@
 
 ## Recent Work
 
+- **Tree-sitter** is being worked.
 - Fix split-screen operations in mode handling.
-- Fixed highlight handling when a line break is immediately followed by a prohibited line-start character and background handling when the color column limit is exceeded.
-- Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
 - **Search** is being reworked.
+- Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
 
 ## Features
 
