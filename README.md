@@ -29,7 +29,6 @@
 - Search and replace
 - Spell checker
 - UTF-8 normalization
-- Syntax highlighting
 
 ### Language & File Support
 - Language package support (file type packages)
@@ -60,6 +59,12 @@ The editor is designed with a modular package structure.
 
 ```bash
 $ go install github.com/ge-editor/ge@latest
+```
+
+To enable Tree-sitter syntax highlighting (C runtime):
+
+```bash
+$ go install -tags=cts github.com/ge-editor/ge@latest
 ```
 
 ## Development
