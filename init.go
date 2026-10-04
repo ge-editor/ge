@@ -10,7 +10,6 @@ import (
 	"github.com/ge-editor/gecore/lang"
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
-	"github.com/ge-editor/language/fundamental"
 	"github.com/ge-editor/language/mode"
 )
 
@@ -30,7 +29,7 @@ func init() {
 	// ----------------------------------
 
 	// Register default lang Mode
-	lang.Modes.Register(fundamental.NewFundamental())
+	lang.Modes.Register(mode.NewFundamental())
 	// Register lang Mode
 	lang.Modes.Register(mode.NewGoMode())
 	lang.Modes.Register(mode.NewMarkdownMode())

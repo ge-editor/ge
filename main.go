@@ -183,12 +183,11 @@ func event(tev tcell.Event) {
 		gecore.Echo.AddText("Interrupt")
 
 		// treesitter
-		/*
-			if marker, ok := ev.Data().(string); ok && marker == "ge-syntax-update" {
-				gelog.Debug("ge-syntax-update")
-				return
-			}
-		*/
+		if marker, ok := ev.Data().(string); ok && marker == "ge-syntax-update" {
+			gelog.Debug("ge-syntax-update")
+			gecore.Echo.AddText("ge-syntax-update")
+			return
+		}
 
 	case *tcell.EventResize:
 		overlay.OverlayManager().Resize(*ev)
