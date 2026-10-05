@@ -17,6 +17,9 @@
 - Basic text editing capabilities
 - Customizable themes
 - Portable design, including the build environment
+- Syntax highlighting
+    - Go
+    - Markdown (without inline)
 
 ## Planned Features
 

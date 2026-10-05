@@ -33,6 +33,7 @@ func init() {
 	// Register lang Mode
 	lang.Modes.Register(mode.NewGoMode())
 	lang.Modes.Register(mode.NewMarkdownMode())
+	lang.Modes.Register(mode.NewOrgMode())
 
 	// ----------------------------------
 	// tree Leaf
