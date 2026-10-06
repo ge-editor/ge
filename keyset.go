@@ -151,9 +151,35 @@ func init() {
 		gecore.Echo.AddText("(Type e to repeat macro)")
 	})
 
-	// OpMode ウインドウ分割操作モード
+	// -----------------
+	// ウインドウ操作
+	// -----------------
+
+	// Kill active view
+	rootKey.Bind("Ctrl+X", "0").Do(func() {
+		tree.GetActiveTree().DeleteWindow()
+	})
+	// Kill all views but active
+	rootKey.Bind("Ctrl+X", "1").Do(func() {
+		tree.GetActiveTree().DeleteOtherWindows()
+	})
+	// Split active view vertically
+	rootKey.Bind("Ctrl+X", "2").Do(func() {
+		top, _ := tree.GetActiveTree().InsertBottom(tree.GetActiveTree())
+		tree.SetActiveTree(top)
+	})
+	// Split active view horizontally
+	rootKey.Bind("Ctrl+X", "5").Do(func() {
+		left, _ := tree.GetActiveTree().InsertRight(tree.GetActiveTree())
+		tree.SetActiveTree(left)
+	})
+	// Toggle maximize active view
+	rootKey.Bind("Ctrl+X", "9").Do(func() {
+		tree.GetActiveTree().ToggleMaximizeActive(0.90)
+	})
+
 	// Operation mode
-	rootKey.Bind("Ctrl+X", "o").Do(tree.ActiveTreeGet().NextInCycle)
+	rootKey.Bind("Ctrl+X", "o").Do(tree.GetActiveTree().NextInCycle)
 	leafOpModeFactory := func() mode.Mode {
 		return modes.NewLeafOpMode(modeManager, `1234567890acdefgijmnopquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
 			root.Bind("h").Do(vm.SplitHorizontally)
@@ -180,7 +206,8 @@ func init() {
 			})
 		})
 	}
-	rootKey.Bind("Ctrl+X", "Ctrl+W").Do(func() {
+	// View operations mode
+	rootKey.Bind("Ctrl+X", "w").Do(func() {
 		modeManager.Push(leafOpModeFactory())
 	})
 

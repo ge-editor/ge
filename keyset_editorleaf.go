@@ -126,7 +126,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			// Close the displayed bufferSet
 			// Therefore
 			// Also close the same bufferSet opened in windows other than active
-			leaf := tree.ActiveTreeGet().GetLeaf()
+			leaf := tree.GetActiveTree().GetLeaf()
 			leaf.Kill(leaf, true)
 			// activeTree.Kill(leaf, true)
 			// tree.GetRootTree().Kill(leaf, false)
@@ -241,9 +241,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 	})
 
 	// Buffer list
-	// C-x b : Switch buffer in the active leaf
+	// C-x C-b : Switch buffer in the active leaf
 	// これは、ひとまず OK
-	km.Bind("Ctrl+X", "b").Do(func() {
+	km.Bind("Ctrl+X", "Ctrl+b").Do(func() {
 		// Minibuffer
 		mb := editorleaf.MinibufferManager()
 		// Popupmenu
@@ -317,7 +317,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 	// Save as
 	// これはひとまず OK
-	km.Bind("Ctrl+X", "w").Do(func() {
+	km.Bind("Ctrl+X", "Ctrl+w").Do(func() {
 		const (
 			InputMinibuffer utils.TargetValue = iota
 			InputYesNo

@@ -38,7 +38,7 @@ func main() {
 
 	v := tree.LeafTypes.GetDefaultLeafType()
 	tree.SetRootTree(tree.NewRootTree(v))
-	tree.ActiveTreeSet(tree.GetRootTree())
+	tree.SetActiveTree(tree.GetRootTree())
 
 	// Register Overlay Manager
 	overlay.OverlayManager().SetTree(tree.GetRootTree())

@@ -62,7 +62,7 @@ ifneq ($(filter release,$(TAG)),)
 else ifneq ($(filter develop,$(TAG)),)
 	# develop向けのオプションがあればここに記述
 else ifneq ($(filter debug,$(TAG)),)
-	BUILD_OPTIONS = -ldflags "-X 'main.buildTime=$(BUILD_Time)' -X 'main.gitCommit=$(GIT_COMMIT)'"
+	BUILD_OPTIONS = -ldflags "-X 'main.buildTime=$(BUILD_TIME)' -X 'main.gitCommit=$(GIT_COMMIT)'"
 endif
 
 # Build target

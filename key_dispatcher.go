@@ -193,6 +193,6 @@ func (l *leafLayer) Exclusive() bool { return true }
 func (l *leafLayer) Priority() int   { return 50 }
 
 func (l *leafLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispatchTransition) {
-	leaf := tree.ActiveTreeGet().GetLeaf()
+	leaf := tree.GetActiveTree().GetLeaf()
 	return leaf.DispatchKey(ev)
 }

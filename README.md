@@ -104,7 +104,7 @@ After installing ge, you can start it by running the ge command in your terminal
 | C-g                 | Universal cancel button
 | C-x C-c             | Quit from the ge
 | C-x C-s             | Save file [prompt maybe]
-| C-x w               | Save file as [prompt maybe]
+| C-x C-w             | Save file as [prompt maybe]
 | C-x C-f             | Open file
 | M-g                 | Go to line [prompt]
 | C-/                 | Undo
@@ -113,14 +113,14 @@ After installing ge, you can start it by running the ge command in your terminal
 ### View/buffer operations:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
-| C-x C-w             | View operations mode
-| ~~C-x 0~~           | ~~Kill active view~~
-| ~~C-x 1~~           | ~~Kill all views but active~~
-| ~~C-x 2~~           | ~~Split active view vertically~~
-| ~~C-x 3~~           | ~~Split active view horizontally~~
-| ~~C-x o~~           | ~~Make a sibling view active~~
+| C-x w               | View operations mode
+| C-x 0               | Kill active view
+| C-x 1               | Kill all views but active
+| C-x 2               | Split active view vertically
+| C-x 5               | Split active view horizontally
+| C-x 9               | Toggle maximize active view
 | C-x o               | Cycle through views
-| C-x b               | Switch buffer in the active view [prompt]
+| C-x C-b             | Switch buffer in the active view [prompt]
 | C-x k               | Kill buffer in the active view
 
 ### View operations mode:
