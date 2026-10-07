@@ -11,6 +11,7 @@ require (
 	github.com/ge-editor/language v0.1.13
 	github.com/ge-editor/theme v0.1.13
 	github.com/ge-editor/utils v0.1.8
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 )
 
 require (

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/gdamore/tcell/v3"
 
@@ -94,7 +94,9 @@ func init() {
 
 	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })
 
+	// ----------------------------
 	// Execute extended command
+	// ----------------------------
 	rootKey.Bind("Esc", "x").Do(func() {
 		target := tree.GetActiveTree()
 		if target == nil {
@@ -115,7 +117,6 @@ func init() {
 		}
 
 		var cmd excommand.ExCommand = nil
-
 		var candy []excommand.Candidate
 
 		updateItems := func(filter string) []string {
@@ -123,7 +124,7 @@ func init() {
 
 			items := []string{}
 			for _, buff := range candy {
-				items = append(items, buff.Value+" ("+buff.Description+")")
+				items = append(items, buff.Value+" ("+buff.Command.Description()+")")
 			}
 			if len(items) == 1 {
 				if filter == candy[0].Value {
@@ -140,34 +141,7 @@ func init() {
 			km.Bind("Up").Do(pm.CursorBackward)
 			km.Bind("Home").Do(pm.CursorHome)
 			km.Bind("End").Do(pm.CursorEnd)
-			km.Bind("Enter").Do(func() {
-				gelog.Error("ESC-X", "Enter")
-				index, _ := pm.GetItem()
-				if index < 0 || index >= len(candy) {
-					gelog.Error("Out of []Candidate index", "index", index, "candy", candy)
-					return
-				}
-				//v := (candy)[index].Value
-				//gecore.Echo.AddText(v)
-				if cmd == nil {
-					cmd = candy[index].Command
-					gecore.Echo.AddText("Set: " + cmd.Name())
-				} else {
-					gecore.Echo.AddText("Run: " + cmd.Name())
-					bytes, _, _ := mb.GetBytes()
-					fields := strings.Fields(string(bytes))
-					if len(fields) == 0 || cmd == nil {
-						gecore.Echo.AddText("return: " + cmd.Name())
-						return
-					}
-
-					ctx := context.Background()
-					handled, err := cmd.Execute(ctx, fields[1:])
-					gelog.Error("ESC-X", "handle", handled, "err", err)
-					cmd = nil
-					close()
-				}
-			})
+			// km.Bind("Enter").Do(func() {})
 		}
 
 		// ここでは bindPmKeymap は bind せずに nil にしておく
@@ -185,40 +159,46 @@ func init() {
 
 			// このセッション専用のキーをマッピングする
 			km.Bind("Enter").Do(func() {
-				bytes, _, _ := mb.GetBytes()
-				text := string(bytes)
-				gecore.Echo.AddText("AAAAA: " + text)
-				// mb.Close()
-				// close()
+				gecore.Echo.AddText("OK")
 
-				gecore.Echo.AddText("ESC-X", "Enter")
 				index, _ := pm.GetItem()
 				if index < 0 || index >= len(candy) {
-					gelog.Error("Out of []Candidate index", "index", index, "candy", candy)
-					return
-				}
-				//v := (candy)[index].Value
-				//gecore.Echo.AddText(v)
-				if cmd == nil {
-					cmd = candy[index].Command
-					gecore.Echo.AddText("Set: " + cmd.Name())
-				} else {
-					gecore.Echo.AddText("Run: " + cmd.Name())
-					bytes, _, _ := mb.GetBytes()
-					fields := strings.Fields(string(bytes))
-					if len(fields) == 0 || cmd == nil {
-						gecore.Echo.AddText("return: " + cmd.Name())
+					if cmd == nil {
+						gecore.Echo.AddText(fmt.Sprintf("Out of []Candidate index: %d, candy: %v", index, candy))
 						return
 					}
-
-					ctx := context.Background()
-					handled, err := cmd.Execute(ctx, fields[1:])
-					gelog.Error("ESC-X", "handle", handled, "err", err)
-					cmd = nil
-					close()
+				} else {
+					cmd = candy[index].Command
+					return
 				}
-			})
 
+				gecore.Echo.AddText("Run: " + cmd.Name())
+				bytes, _, _ := mb.GetBytes()
+				// fields := strings.Fields(string(bytes))
+				// shlex を使うとクォートやエスケープが考慮される
+				/*
+					fields, err := shlex.Split(string(bytes))
+					if err != nil {
+						gecore.Echo.AddText(err.Error())
+						return
+					}
+					gelog.Debug("shlex.Split", "fields", fields)
+				*/
+
+				// 入力をそのまま渡す
+				fields := []string{string(bytes)}
+				if len(fields) == 0 || cmd == nil {
+					gecore.Echo.AddText("return: " + cmd.Name())
+					return
+				}
+
+				ctx := context.Background()
+				// handled, err := cmd.Execute(ctx, fields[1:])
+				handled, err := cmd.Execute(ctx, fields)
+				gelog.Debug("ESC-X", "handle", handled, "err", err)
+				cmd = nil
+				close()
+			}) // Enter
 		})
 		mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 			bytes, _, _ := mb.GetBytes()
@@ -229,7 +209,9 @@ func init() {
 		mb.SetBytes([]byte{}) // Clear minibuffer content
 	})
 
+	// -------------------
 	// Keyboard macro
+	// -------------------
 	macroKey.Bind("Ctrl+X", "(").Do(func() {
 		macroMode.StartRecording()
 		gecore.Echo.AddText("Defining keyboard macro...")
