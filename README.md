@@ -4,6 +4,7 @@
 
 ## Recent Work
 
+- **Execute extended command** is being worked.
 - **Tree-sitter** is being worked.
 - Fix split-screen operations in mode handling.
 - **Search** is being reworked.

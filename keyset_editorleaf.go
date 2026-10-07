@@ -381,28 +381,25 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		mb.Editor().MoveCursorEndOfFile()
 	})
 
+	// --------------------------------------------------
 	// Open file / Find file
 	// シンボリックリンクの先がディレクトリーの場合 / 異常
 	km.Bind("Ctrl+X", "Ctrl+F").Do(func() {
 		const (
-			InputMinibuffer utils.TargetValue = iota
-			InputPopupmenu
+			// Toggle focus 用に用意したが不要
+			// InputMinibuffer utils.TargetValue = iota
+			// InputPopupmenu
 
 			SEP = string(filepath.Separator) // OK in 1.25+
 		)
 
-		// Minibuffer
 		mb := editorleaf.MinibufferManager()
-		// Popupmenu
 		pm := manager.NewPopupmenuManager()
 
 		var buffers []utils.FileEvent
 		items := []string{}
 
-		// ctx, cancel := context.WithCancel(context.Background())
-
 		close := func() {
-			// cancel()
 			mb.Close()
 			pm.Close()
 			overlay.OverlayManager().Remove(pm)
@@ -413,7 +410,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 			for _, buff := range buffers {
 				item := filepath.Base(buff.Path)
-				if buff.IsDir {
+				if buff.IsDir && buff.Path != "." {
 					item += SEP
 				}
 				if filter != "" && !utils.ContainsAllCharacters(item, filter) {
@@ -426,25 +423,15 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					items = []string{}
 				}
 			}
-			if len(items) == 0 {
-				pm.Active(false)
-			} else {
-				pm.Active(true)
-			}
+			pm.Active(len(items) != 0)
 			pm.SetItems(items)
 		}
 
 		updateBuffers := func(path string) {
+			if path == "." {
+				path += SEP
+			}
 			buffers = utils.Dirwalk2(path)
-			/*
-				go func() {
-					buffers = utils.DirwalkParallelCtxDepth(ctx, path, 0)
-					// gelog.Info("buffers", buffers)
-					// updateUI(files)
-					updateItems("")
-					overlay.OverlayManager().Layout(Screen.Rect)
-				}()
-			*/
 		}
 
 		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
@@ -467,11 +454,22 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				}
 
 				if pm.IsActive() {
+					path := ""
+					dir := ""
+
 					index, _ := pm.GetItem()
-					bytes, _, _ := mb.GetBytes()
-					dir := string(bytes)
 					base := items[index]
-					path := filepath.Join(dir, base)
+
+					bytes, _, _ := mb.GetBytes()
+					current := string(bytes) // 入力途中の場合があるのでそのまま使用してはいけない
+					dir = filepath.Dir(current)
+					if dir == "." /* || dir == "" */ {
+						dir = ""
+						path = base
+					} else {
+						path = filepath.Join(dir, base)
+					}
+
 					info, err := os.Stat(path)
 					if errors.Is(err, os.ErrNotExist) {
 						path := filepath.Join(filepath.Dir(dir), base)
@@ -483,6 +481,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 						if info.IsDir() {
 							path := strings.TrimRight(path, SEP) + SEP
 							mb.SetString(path)
+							mb.Editor().MoveCursorEndOfLine()
 							updateBuffers(path)
 							updateItems("")
 						} else {
@@ -496,6 +495,12 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				} else {
 					bytes, _, _ := mb.GetBytes()
 					path := string(bytes)
+
+					// FIX: "." はファイルとして開かず、"./" に展開して候補を出す
+					if path == "." {
+						path = "." + SEP
+					}
+
 					info, err := os.Stat(path)
 					if errors.Is(err, os.ErrNotExist) {
 						gecore.Echo.AddText("New file: " + path)
@@ -507,7 +512,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 						gecore.Echo.AddText(err.Error())
 						return
 					}
-					if info.IsDir() {
+					if info.IsDir() { // FIX: path != "." 条件を削除
 						path := strings.TrimRight(path, SEP) + SEP
 						mb.SetString(path)
 						mb.Editor().MoveCursorEndOfLine()
@@ -539,6 +544,15 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 				bytes, _, _ := mb.GetBytes()
 				path := string(bytes)
+
+				// FIX: "." 入力中はカレントディレクトリーの項目を "." で絞り込む
+				// (.gitignore などの隠しファイルを探すケース)
+				if path == "." {
+					updateBuffers(".")
+					updateItems(".")
+					return
+				}
+
 				info, err := os.Stat(path)
 				if errors.Is(err, os.ErrNotExist) {
 					updateBuffers(filepath.Dir(path))
@@ -553,12 +567,13 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					gecore.Echo.AddText(err.Error())
 					return
 				}
-				if info.IsDir() {
+				if info.IsDir() { // FIX: path != "." 条件を削除 (上で処理済み)
 					updateBuffers(path)
 					updateItems("")
 					if result != keychord.DispatchExecuted {
 						b := mb.Editor().IsEndOfLine()
 						mb.SetString(strings.TrimRight(path, SEP) + SEP)
+						mb.Editor().MoveCursorEndOfLine()
 						if b {
 							mb.Editor().MoveCursorEndOfLine()
 						}
@@ -577,5 +592,6 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			pm.Active(true)
 		}
 	})
+	// ------------------------------
 
 }

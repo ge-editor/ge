@@ -1,20 +1,39 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"strings"
 
 	"github.com/gdamore/tcell/v3"
 
 	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
-	"github.com/ge-editor/gecore/killbuffer"
+	"github.com/ge-editor/gecore/excommand"
+	"github.com/ge-editor/gecore/manager"
 	"github.com/ge-editor/gecore/mode"
 	"github.com/ge-editor/gecore/modes"
 	"github.com/ge-editor/gecore/overlay"
+	"github.com/ge-editor/gecore/popupmenu"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
+	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/keychord"
 )
+
+// commandsForTree collects leaf commands from the focused leaf toward its
+// parents, then appends global commands. Tree traversal belongs to the caller;
+// excommand only resolves the ordered command list.
+func commandsForTree(target *tree.Tree) []excommand.ExCommand {
+	var commands []excommand.ExCommand
+	for tr := target; tr != nil; tr = tr.Parent() {
+		leaf := tr.GetLeaf()
+		provider, ok := leaf.(excommand.CommandProvider)
+		if ok {
+			commands = append(commands, provider.Commands()...)
+		}
+	}
+	return append(commands, excommand.GlobalCommands()...)
+}
 
 func init() {
 	// Initialize keyboard macro
@@ -75,65 +94,139 @@ func init() {
 
 	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })
 
-	/*
-		// TEST
-		rootKey.Bind("Esc", "x").Do(func() {
-			mb := editorleaf.MinibufferManager()
-			if mb.IsActive() {
-				return
-			}
-			mbSession := editorleaf.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
-				// 最初にデフォルトキーをマッピングする
-				KeysetMinibufferCommon(km, miniEditor)
-
-				// このセッション専用のキーをマッピングする
-				km.Bind("a").Do(func() {
-					bytes, _, _ := mb.GetBytes()
-					mb.SetString(string(bytes) + "a")
-				})
-				km.Bind("b").Do(func() {
-					bytes, _, _ := mb.GetBytes()
-					mb.SetString(string(bytes) + "b")
-				})
-				km.Bind("Enter").Do(func() {
-					bytes, _, _ := mb.GetBytes()
-					gecore.Echo.AddText("ESC-X: " + string(bytes))
-					mb.Close()
-				})
-			})
-			mb.Start(mbSession, nil)
-		})
-	*/
-
+	// Execute extended command
 	rootKey.Bind("Esc", "x").Do(func() {
+		target := tree.GetActiveTree()
+		if target == nil {
+			return
+		}
+
+		// Minibuffer
 		mb := editorleaf.MinibufferManager()
 		if mb.IsActive() {
 			return
 		}
+		// Popupmenu
+		pm := manager.NewPopupmenuManager()
+
+		close := func() {
+			mb.Close()
+			pm.Close()
+		}
+
+		var cmd excommand.ExCommand = nil
+
+		var candy []excommand.Candidate
+
+		updateItems := func(filter string) []string {
+			candy = excommand.Complete(commandsForTree(target), filter)
+
+			items := []string{}
+			for _, buff := range candy {
+				items = append(items, buff.Value+" ("+buff.Description+")")
+			}
+			if len(items) == 1 {
+				if filter == candy[0].Value {
+					items = []string{}
+				}
+			}
+			return items
+		}
+
+		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
+			km.Bind("Ctrl+N").Do(pm.CursorForward)
+			km.Bind("Down").Do(pm.CursorForward)
+			km.Bind("Ctrl+P").Do(pm.CursorBackward)
+			km.Bind("Up").Do(pm.CursorBackward)
+			km.Bind("Home").Do(pm.CursorHome)
+			km.Bind("End").Do(pm.CursorEnd)
+			km.Bind("Enter").Do(func() {
+				gelog.Error("ESC-X", "Enter")
+				index, _ := pm.GetItem()
+				if index < 0 || index >= len(candy) {
+					gelog.Error("Out of []Candidate index", "index", index, "candy", candy)
+					return
+				}
+				//v := (candy)[index].Value
+				//gecore.Echo.AddText(v)
+				if cmd == nil {
+					cmd = candy[index].Command
+					gecore.Echo.AddText("Set: " + cmd.Name())
+				} else {
+					gecore.Echo.AddText("Run: " + cmd.Name())
+					bytes, _, _ := mb.GetBytes()
+					fields := strings.Fields(string(bytes))
+					if len(fields) == 0 || cmd == nil {
+						gecore.Echo.AddText("return: " + cmd.Name())
+						return
+					}
+
+					ctx := context.Background()
+					handled, err := cmd.Execute(ctx, fields[1:])
+					gelog.Error("ESC-X", "handle", handled, "err", err)
+					cmd = nil
+					close()
+				}
+			})
+		}
+
+		// ここでは bindPmKeymap は bind せずに nil にしておく
+		// miniBuffer のキーマップの中で bind する
+		pmSession := popupmenu.NewSession([]string{}, nil)
+		pm.Start(pmSession)
+
 		mbSession := editorleaf.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
-			// 最初にデフォルトキーをマッピングする
+			bytes, _, _ := mb.GetBytes()
+			text := string(bytes)
+			pm.SetItems(updateItems(text)) // here, need first layout drawing.
+
 			KeysetMinibufferCommon(km, miniEditor)
+			bindPmKeymap(km, pm.Popupmenu())
 
 			// このセッション専用のキーをマッピングする
 			km.Bind("Enter").Do(func() {
 				bytes, _, _ := mb.GetBytes()
-				gecore.Echo.AddText("ESC-X: " + string(bytes))
-				// var s strings.Builder
-				// s.WriteString("Editorleaf.BufferSets:\n")
-				l := len(*editorleaf.BufferSets)
-				s := make([][]byte, l+1)
-				s[0] = []byte("Editorleaf.BufferSets:")
-				for i := 0; i < l; i++ { // , bs := range *editorleaf.BufferSets {
-					bs := (*editorleaf.BufferSets)[i]
-					s[i+1] = fmt.Appendf(nil, "%d: %s (Metas: %d)\n", i, bs.GetPath(), len(bs.GetMetas()))
-					//s.WriteString(fmt.Sprintf("%d: %s (Metas: %d)\n", i,
-					//	bs.GetPath(), len(bs.GetMetas())))
+				text := string(bytes)
+				gecore.Echo.AddText("AAAAA: " + text)
+				// mb.Close()
+				// close()
+
+				gecore.Echo.AddText("ESC-X", "Enter")
+				index, _ := pm.GetItem()
+				if index < 0 || index >= len(candy) {
+					gelog.Error("Out of []Candidate index", "index", index, "candy", candy)
+					return
 				}
-				killbuffer.KillBuffer.PushKillBuffer(s, []byte{'\n'})
-				mb.Close()
+				//v := (candy)[index].Value
+				//gecore.Echo.AddText(v)
+				if cmd == nil {
+					cmd = candy[index].Command
+					gecore.Echo.AddText("Set: " + cmd.Name())
+				} else {
+					gecore.Echo.AddText("Run: " + cmd.Name())
+					bytes, _, _ := mb.GetBytes()
+					fields := strings.Fields(string(bytes))
+					if len(fields) == 0 || cmd == nil {
+						gecore.Echo.AddText("return: " + cmd.Name())
+						return
+					}
+
+					ctx := context.Background()
+					handled, err := cmd.Execute(ctx, fields[1:])
+					gelog.Error("ESC-X", "handle", handled, "err", err)
+					cmd = nil
+					close()
+				}
 			})
+
 		})
-		mb.Start(mbSession, nil)
+		mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
+			bytes, _, _ := mb.GetBytes()
+			text := string(bytes)
+			pm.SetItems(updateItems(text))
+		})
+
+		mb.SetBytes([]byte{}) // Clear minibuffer content
 	})
 
 	// Keyboard macro
