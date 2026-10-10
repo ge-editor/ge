@@ -10,7 +10,7 @@ import (
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/mode"
 	"github.com/ge-editor/gecore/modes"
-	"github.com/ge-editor/gecore/overlay"
+	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/keychord"
 )
@@ -19,7 +19,8 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 
 	editorKey.Bind("Ctrl+L").Do(func() {
 		editor.Recenter()
-		overlay.OverlayManager().Draw()
+		// overlay.OverlayManager().Draw()
+		screen.Get().EventQ() <- tcell.NewEventResize(screen.Get().Size())
 		gecore.Echo.AddText("")
 	})
 

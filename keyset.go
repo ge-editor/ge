@@ -89,7 +89,8 @@ func init() {
 	//  - Editorleaf Center view on line containing cursor
 	// Bind.DoAlso
 	rootKey.Bind("Ctrl+L").DoAlso(func() {
-		overlay.OverlayManager().Draw()
+		// overlay.OverlayManager().Draw()
+		screen.Get().EventQ() <- tcell.NewEventResize(screen.Get().Size())
 	})
 
 	rootKey.Bind("Ctrl+Z").Do(func() { screen.Get().Suspend() })

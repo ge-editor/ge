@@ -16,7 +16,7 @@ import (
 func init() {
 	path, _ := os.Executable()
 	base := filepath.Base(path)
-	gelog.InitLogger(filepath.Join(filepath.Dir(path), base+".log"), 3)
+	gelog.InitLogger(filepath.Join(filepath.Dir(path), base+".log"), 1)
 
 	/*
 		e := charsetencoder.Charencorder{}

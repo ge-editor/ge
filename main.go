@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/gdamore/tcell/v3"
@@ -63,36 +64,73 @@ func main() {
 
 var tcellEvent chan tcell.Event
 
-func startDraw() {
-	// screen.Get().SetContent(Screen.Width-1, Screen.Height-1, ' ', nil, theme.ColorDefault)
-	ctx := tree.ECM.Rotate("draw")
+// 描画要求。バッファ1で合流させる(何回要求されても保留は1つ)。
+var drawReq = make(chan struct{}, 1)
 
-	go func(ctx context.Context) {
-		if !draw(ctx) {
+// 最新の draw 用 ctx。drawLoop が描画開始時に読む。
+type ctxBox struct{ ctx context.Context }
+
+var latestDrawCtx atomic.Pointer[ctxBox]
+
+// requestDraw は main goroutine(mainLoop)からのみ呼ぶ。
+// 実行中の draw をキャンセルし、次の draw を1つだけ予約する。
+func requestDraw() {
+	ctx := tree.ECM.Rotate("draw") // 実行中の draw をキャンセル
+	latestDrawCtx.Store(&ctxBox{ctx})
+
+	select {
+	case drawReq <- struct{}{}:
+	default: // すでに保留中なら合流
+	}
+}
+
+// drawLoop は描画専用の goroutine。draw は常にこの1本でしか走らない。
+func drawLoop(stop <-chan struct{}, done chan<- struct{}) {
+	defer close(done)
+
+	for {
+		select {
+		case <-stop:
+			return
+		case <-drawReq:
+		}
+
+		box := latestDrawCtx.Load()
+		if box == nil {
+			continue
+		}
+
+		if !draw(box.ctx) {
 			Screen.Show()
 		}
-		/*
-			if tree.ECM.IsCanceled(ctx, "draw") {
-				return
-			}
-
-			Screen.Show()
-		*/
 
 		// Restore the editor's default foreground and background colors
 		// for IME preedit rendering.
 		theme.RestoreTerminalAttributes()
-	}(ctx)
+	}
 }
 
 func mainLoop() {
 	tcellEvent = Screen.EventQ()
-	for tev := range tcellEvent { // イベントチャネルから読み取り
+
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go drawLoop(stop, done)
+
+	// 終了時は実行中の draw をキャンセルし、drawLoop の終了を待ってから
+	// main() の defer で Screen.Fini() が走るようにする。
+	defer func() {
+		close(stop)
+		tree.ECM.Rotate("draw")
+		<-done
+	}()
+
+	for tev := range tcellEvent {
 		event(tev)
 		if consumeMoreEvents() {
 			break // quit ge-editor
 		}
-		startDraw()
+		requestDraw()
 	}
 }
 
@@ -102,28 +140,13 @@ func beforeQuit() {
 	}
 }
 
-/*
-func consumeMoreEvents() bool {
-	for {
-		select {
-		case ev := <-tcellEvent:
-			event(ev)
-		case <-quit:
-			beforeQuit()
-			return true
-		default:
-			return false
-		}
-	}
-}
-*/
-
 func consumeMoreEvents() bool {
 
 	// Keep consuming events while they continue to arrive.
 	// Return when no event arrives within the timeout.
 	// timer := time.NewTimer(10 * time.Millisecond)
-	timer := time.NewTimer(16 * time.Millisecond)
+	// timer := time.NewTimer(16 * time.Millisecond)
+	timer := time.NewTimer(8 * time.Millisecond)
 	defer timer.Stop()
 
 	for {
@@ -149,19 +172,19 @@ func consumeMoreEvents() bool {
 }
 
 // debug
-var drawCount int
+// var drawCount int
 
 func draw(ctx context.Context) bool {
 	// debug
-	gecore.Echo.AddText(fmt.Sprintf("draw %d", drawCount))
-	drawCount += 1
+	// gecore.Echo.AddText(fmt.Sprintf("draw %d", drawCount))
+	// drawCount += 1
 
-	if overlay.OverlayManager().Draw() {
+	if overlay.OverlayManager().Draw(ctx) {
 		return true
 	}
 
 	if modeManager.IsInMode() {
-		modeManager.CurrentMode().Draw()
+		modeManager.CurrentMode().Draw(ctx)
 	}
 
 	return false
@@ -179,13 +202,13 @@ func event(tev tcell.Event) {
 
 	switch ev := (tev).(type) {
 	case *tcell.EventInterrupt:
-		gelog.Info("EventInterrupt")
-		gecore.Echo.AddText("Interrupt")
+		gelog.Debug("EventInterrupt")
+		// gecore.Echo.AddText("Interrupt")
 
-		// treesitter
+		// treesitter debug
 		if marker, ok := ev.Data().(string); ok && marker == "ge-syntax-update" {
-			gelog.Debug("ge-syntax-update")
-			gecore.Echo.AddText("ge-syntax-update")
+			// gelog.Debug("ge-syntax-update")
+			// gecore.Echo.AddText("ge-syntax-update")
 			return
 		}
 
@@ -200,8 +223,8 @@ func event(tev tcell.Event) {
 		btn := ev.Buttons()
 		if btn&tcell.WheelDown != 0 {
 			// x, y := ev.Position()
-			_, y := ev.Position()
-			gelog.Debug("Mouse", "y", y)
+			// _, y := ev.Position()
+			// gelog.Debug("Mouse", "y", y)
 			// マウスホイール下回転処理
 			// -> 画面の表示開始行（ScrollTop）を +1〜3 行動かす
 			// x, y := ev.Position() を使ってマウスカーソル下の要素だけスクロールさせることも可能
