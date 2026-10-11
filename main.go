@@ -42,7 +42,7 @@ func main() {
 	tree.SetActiveTree(tree.GetRootTree())
 
 	// Register Overlay Manager
-	overlay.OverlayManager().SetTree(tree.GetRootTree())
+	overlay.OverlayManager().SetTree(tree.CurrentRootOverlay{})
 	overlay.OverlayManager().SetMinibuffer(editorleaf.MinibufferManager())
 	overlay.OverlayManager().SetEcho(gecore.Echo)
 
