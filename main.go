@@ -13,6 +13,7 @@ import (
 	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
+	"github.com/ge-editor/gecore/workspace"
 	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/theme"
 )
@@ -40,6 +41,11 @@ func main() {
 	v := tree.LeafTypes.GetDefaultLeafType()
 	tree.SetRootTree(tree.NewRootTree(v))
 	tree.SetActiveTree(tree.GetRootTree())
+
+	// The first workspace adopts the RootTree created above.
+	if _, err := workspace.InitDefault(gecore.WorkSpaces); err != nil {
+		gelog.Error(err.Error())
+	}
 
 	// Register Overlay Manager
 	overlay.OverlayManager().SetTree(tree.CurrentRootOverlay{})
