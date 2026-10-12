@@ -31,6 +31,23 @@ var (
 	gitCommit string
 )
 
+func ver() string {
+	v := "ge v0.1.15-dev"
+	w := ""
+	if buildTime != "" {
+		w = fmt.Sprintf(" - build %s", buildTime)
+	}
+	if gitCommit != "" {
+		if w == "" {
+			w = " -"
+		} else {
+			w += ","
+		}
+		w = fmt.Sprintf("%s commit %s", w, gitCommit)
+	}
+	return v + w
+}
+
 func main() {
 	Screen = screen.Get()
 	defer func() {
@@ -63,7 +80,7 @@ func main() {
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(fmt.Sprintf("ge v0.1.15-dev - build %s, commit %s", buildTime, gitCommit))
+	gecore.Echo.AddText(ver())
 
 	mainLoop()
 }

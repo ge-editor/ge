@@ -4,6 +4,8 @@
 
 ## Recent Work
 
+- Fix(Popupmenu) slider position mapping, supports column title display.
+- Fix(Tree-sitter markdown): replace parser after cancelled parse.
 - **Execute extended command** is being worked.
 - **Tree-sitter** is being worked.
 - Fix split-screen operations in mode handling.

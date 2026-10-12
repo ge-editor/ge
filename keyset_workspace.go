@@ -13,10 +13,6 @@ import (
 	"github.com/ge-editor/utils"
 )
 
-// The first two popup items are the header and its separator.
-// They are not selectable.
-const workspaceMenuFirstRow = 2
-
 func init() {
 	// C-x p : Switch workspace / root tree
 	rootKey.Bind("Ctrl+X", "p").Do(switchWorkspaceMenu)
@@ -24,10 +20,9 @@ func init() {
 
 // Switch menu:
 //
-//\t   Workspace | RootTree
-//\t-------------|---------
-//\t1. ge        | main
-//\t2. gecore    | main
+//\tWorkspace | RootTree
+//\tge        | main
+//\tgecore    | main
 //\tFilter:
 func switchWorkspaceMenu() {
 	mb := editorleaf.MinibufferManager()
@@ -47,13 +42,13 @@ func switchWorkspaceMenu() {
 		items, entries := workspaceMenuItems(filter)
 		shown = entries
 		if p := pm.Popupmenu(); p != nil {
-			p.SetItems(items, workspaceMenuFirstRow)
+			p.SetItems(items, 0)
 		}
 	}
 
 	bindPmKeymap := func(km *keychord.RootNode, p *popupmenu.PopupmenuStruct) {
 		backward := func() {
-			if i, _ := p.GetItem(); i > workspaceMenuFirstRow {
+			if i, _ := p.GetItem(); i > 0 {
 				p.CursorBackward()
 			}
 		}
@@ -61,16 +56,10 @@ func switchWorkspaceMenu() {
 		km.Bind("Down").Do(p.CursorForward)
 		km.Bind("Ctrl+P").Do(backward)
 		km.Bind("Up").Do(backward)
-		km.Bind("Home").Do(func() {
-			p.CursorHome()
-			for i := 0; i < workspaceMenuFirstRow; i++ {
-				p.CursorForward()
-			}
-		})
+		km.Bind("Home").Do(p.CursorHome)
 		km.Bind("End").Do(p.CursorEnd)
 		km.Bind("Enter").Do(func() {
 			i, _ := p.GetItem()
-			i -= workspaceMenuFirstRow
 			if i < 0 || i >= len(shown) {
 				return
 			}
@@ -83,7 +72,9 @@ func switchWorkspaceMenu() {
 	}
 
 	// bindPmKeymap is bound in the minibuffer keymap below.
-	pm.Start(popupmenu.NewSession([]string{}, nil))
+	pmSession := popupmenu.NewSession([]string{}, nil)
+	pmSession.Popupmenu.SetColumnTitle("Workspace | RootTree")
+	pm.Start(pmSession)
 
 	mbSession := editorleaf.NewSession("Filter: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
 		updateItems("") // here, need first layout drawing.
@@ -97,8 +88,8 @@ func switchWorkspaceMenu() {
 	})
 }
 
-// workspaceMenuItems returns the popup items (header, separator, rows)
-// and the entries that the rows stand for. No rows -> no items.
+// workspaceMenuItems returns popup rows and the entries they represent.
+// PopupmenuStruct draws the column header separately so it stays visible while scrolling.
 func workspaceMenuItems(filter string) ([]string, []workspace.Entry) {
 	all := workspace.Entries()
 	entries := make([]workspace.Entry, 0, len(all))
@@ -109,28 +100,19 @@ func workspaceMenuItems(filter string) ([]string, []workspace.Entry) {
 		}
 		entries = append(entries, e)
 	}
-	if len(entries) == 0 {
-		return []string{}, entries
-	}
-
 	width := func(s string) int { return utils.WidthOnScreen([]byte(s)) }
 	pad := func(s string, w int) string {
 		return s + strings.Repeat(" ", max(0, w-width(s)))
 	}
 
-	const h1, h2 = "Workspace", "RootTree"
-	w1, w2 := width(h1), width(h2)
+	w1, w2 := 0, 0
 	for _, e := range entries {
 		w1 = max(w1, width(e.Workspace.Name))
 		w2 = max(w2, width(e.RootTree.Name))
 	}
 	numW := len(fmt.Sprint(len(entries))) + 2 // "N. "
 
-	items := make([]string, 0, len(entries)+workspaceMenuFirstRow)
-	items = append(items,
-		strings.Repeat(" ", numW)+pad(h1, w1)+" | "+h2,
-		strings.Repeat("-", numW+w1+1)+"|"+strings.Repeat("-", w2+1),
-	)
+	items := make([]string, 0, len(entries))
 	for i, e := range entries {
 		label := pad(fmt.Sprintf("%d.", i+1), numW-1) + " "
 		items = append(items, label+pad(e.Workspace.Name, w1)+" | "+e.RootTree.Name)
