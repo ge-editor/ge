@@ -4,6 +4,7 @@
 
 ## Recent Work
 
+- Added functionality to manage the Workspace and Root Tree.
 - Fix(Popupmenu) slider position mapping, supports column title display.
 - Fix(Tree-sitter markdown): replace parser after cancelled parse.
 - **Execute extended command** is being worked.
@@ -109,6 +110,7 @@ After installing ge, you can start it by running the ge command in your terminal
 | C-x C-s             | Save file [prompt maybe]
 | C-x C-w             | Save file as [prompt maybe]
 | C-x C-f             | Open file
+| C-x p               | Switch workspace / RootTree
 | M-g                 | Go to line [prompt]
 | C-/                 | Undo
 | C-x / (/...)        | Redo
@@ -125,6 +127,19 @@ After installing ge, you can start it by running the ge command in your terminal
 | C-x o               | Cycle through views
 | C-x C-b             | Switch buffer in the active view [prompt]
 | C-x k               | Kill buffer in the active view
+
+### Workspace / RootTree switch menu:
+|  key                |  function                             |
+|---------------------|---------------------------------------|
+| C-n, \<down>        | Move selection down
+| C-p, \<up>          | Move selection up
+| \<home>             | Select first entry
+| \<end>              | Select last entry
+| \<enter>            | Switch to selected workspace / RootTree
+| \<insert>           | Create a RootTree in the selected workspace
+| \<delete>           | Delete selected RootTree [confirmation]
+| M-\<insert>         | Create workspace
+| M-\<delete>         | Delete selected workspace [confirmation]
 
 ### View operations mode:
 |  key                |  function                             |
