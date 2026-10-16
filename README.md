@@ -4,6 +4,7 @@
 
 ## Recent Work
 
+- Preserve workspace context and adjust marks on edits.
 - Added functionality to manage the Workspace and Root Tree.
 - Fix(Popupmenu) slider position mapping, supports column title display.
 - Fix(Tree-sitter markdown): replace parser after cancelled parse.
@@ -43,6 +44,27 @@
 ### Additional Features
 - Limited Org-mode support
 - Explorer View (leaf)
+
+---
+
+### Mark
+
+Marks store the following information:
+
+- Workspace name
+- Root tree name
+- Workspace file path, if the workspace was loaded from a workspace file
+
+When opening a mark or navigating to its position, `ge` attempts to restore the original context using the recorded information, in the following order:
+
+1. Open the mark in the workspace and root tree where it was originally recorded.
+2. If that is not possible, open it in the current workspace if the mark's location is within one of its directories.
+3. Otherwise, open it using the existing behavior.
+
+Marks are maintained as the buffer is edited:
+
+- **Deleted:** Remove a mark if its position is deleted by an edit.
+- **Adjusted:** Update a mark's position when an edit shifts it.
 
 ---
 

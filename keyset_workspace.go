@@ -41,6 +41,7 @@ func switchWorkspaceMenu() {
 	pm := manager.NewPopupmenuManager()
 
 	var shown []workspace.Entry
+	initialSelection := true
 
 	closeMenu := func() {
 		mb.Close()
@@ -52,6 +53,16 @@ func switchWorkspaceMenu() {
 		shown = entries
 		if p := pm.Popupmenu(); p != nil {
 			index, _ := p.GetItem()
+			if initialSelection {
+				initialSelection = false
+				current := tree.CurrentRootTree()
+				for i, entry := range entries {
+					if entry.RootTree == current {
+						index = i
+						break
+					}
+				}
+			}
 			p.SetItems(items, index)
 		}
 	}

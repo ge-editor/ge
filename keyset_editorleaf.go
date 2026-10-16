@@ -183,7 +183,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			marks = editor.FilterByCharacters(text)
 			items := []string{}
 			for _, m := range marks {
-				items = append(items, fmt.Sprintf("%s %s", m.EditBuffer.GetBase(), m.Label))
+				// items = append(items, fmt.Sprintf("%s %s", m.EditBuffer.GetBase(), m.Label))
+				items = append(items, fmt.Sprintf("%s %s", filepath.Base(m.FilePath), m.Label))
 			}
 			pm.SetItems(items)
 			return items
@@ -203,20 +204,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					return
 				}
 				mark := marks[index]
-
-				if utils.SameFile(editor.GetPath(), mark.EditBuffer.GetPath()) {
-					// Set mark to Editor.mark if same the file
-					editor.MoveToMarkPosition(mark)
-				} else {
-					// Change the edit buffer
-					file, _, result, err := editorleaf.BufferSets.GetFileAndMeta(mark.EditBuffer.GetPath())
-					if err != nil {
-						gecore.Echo.AddText(err.Error())
-					}
-					gecore.Echo.AddText(result.String())
-					editor.OpenFile(file.GetPath())
+				if err := editor.OpenMarkPosition( /* editor, */ mark); err != nil {
+					gecore.Echo.AddText(err.Error())
 				}
-				editor.SetRowsPos(mark.RowsPos)
 				close()
 			})
 		}
@@ -265,7 +255,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				items = append(items, buff.EditBuffer.GetBase())
 			}
 			if len(items) == 1 {
-				if utils.SameFile((*buffers)[0].GetPath(), filter) {
+				if utils.IsSameFile((*buffers)[0].GetPath(), filter) {
 					items = []string{}
 				}
 			}
@@ -340,7 +330,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				state.IfActive(InputMinibuffer, func() {
 					bytes, _, _ := mb.GetBytes()
 					newPath := string(bytes)
-					if utils.SameFile(currentPath, newPath) {
+					if utils.IsSameFile(currentPath, newPath) {
 						mb.Close()
 						return
 					}

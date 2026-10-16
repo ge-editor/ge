@@ -20,6 +20,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/ge-editor/locale v0.1.8 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/tree-sitter/go-tree-sitter v0.25.0 // indirect

@@ -10,8 +10,10 @@ import (
 
 	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
+	"github.com/ge-editor/gecore/marks"
 	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/screen"
+	"github.com/ge-editor/gecore/state"
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gecore/workspace"
 	"github.com/ge-editor/gelog"
@@ -158,9 +160,11 @@ func mainLoop() {
 }
 
 func beforeQuit() {
-	if err := gecore.StateSave(); err != nil {
+	if err := state.StateSave(); err != nil {
 		gelog.Error(err.Error())
 	}
+
+	marks.Marks.StopAutoSave()
 }
 
 func consumeMoreEvents() bool {
