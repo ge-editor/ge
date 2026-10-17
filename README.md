@@ -221,7 +221,7 @@ After installing ge, you can start it by running the ge command in your terminal
 |---------------------|---------------------------------------|
 | C-@, C-\<space>     | Set mark
 | C-x C-x             | Swap cursor and mark locations
-| M-u                 | Open Mark list and jump to a Mark
+| M-u (Alt+u)         | Open the Mark list. Filter marks and press Enter to jump to the mark in the current editing context, or Alt+Enter to restore the mark's workspace and root tree when possible and open its file at the marked position.
 | ~~C-x > (>...)~~    | ~~Indent region (lines between the cursor and the mark)~~
 | ~~C-x \< (\<...)~~  | ~~Outdent region (lines between the cursor and the mark)~~
 | ~~C-x C-r~~         | ~~Search & replace (within region) [prompt]~~

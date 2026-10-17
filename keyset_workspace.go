@@ -239,7 +239,7 @@ func deleteRootTree(entry workspace.Entry) {
 		}
 	}
 	if err := w.RemoveRootTree(rt); err != nil {
-		gecore.Echo.AddText("⚠" + err.Error()).JustNowActive(gecore.EchoRed)
+		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(gecore.EchoRed)
 		return
 	}
 	gecore.Echo.AddText("RootTree " + rt.Name + " deleted from workspace " + w.Name)
@@ -357,7 +357,7 @@ func confirmDeleteWorkspace(w *workspace.Workspace) {
 func deleteWorkspace(w *workspace.Workspace) {
 	name := w.Name
 	if err := w.Close(); err != nil {
-		gecore.Echo.AddText("⚠" + err.Error()).JustNowActive(gecore.EchoRed)
+		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(gecore.EchoRed)
 		return
 	}
 	gecore.Echo.AddText("Workspace " + name + " deleted")

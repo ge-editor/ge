@@ -34,7 +34,7 @@ var (
 )
 
 func ver() string {
-	v := "ge v0.1.15-dev"
+	v := "ge v0.1.16-dev"
 	w := ""
 	if buildTime != "" {
 		w = fmt.Sprintf(" - build %s", buildTime)
@@ -82,7 +82,7 @@ func main() {
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(ver())
+	gecore.Echo.AddText(ver()).WithStyle(gecore.EchoBlue)
 
 	mainLoop()
 }

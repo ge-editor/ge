@@ -12,6 +12,7 @@ import (
 
 	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/editorleaf/buffer"
+	"github.com/ge-editor/editorleaf/mark"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/manager"
 	"github.com/ge-editor/gecore/overlay"
@@ -190,6 +191,15 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			return items
 		}
 
+		getMarkByMarksIndex := func() *mark.Mark {
+			index, _ := pm.GetItem()
+			if index < 0 || index >= len(marks) {
+				gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, marks)).WithStyle(gecore.EchoRed)
+				return nil
+			}
+			return /* mark := */ marks[index]
+		}
+
 		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
 			km.Bind("Ctrl+N").Do(pm.CursorForward)
 			km.Bind("Down").Do(pm.CursorForward)
@@ -198,14 +208,22 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			km.Bind("Home").Do(pm.CursorHome)
 			km.Bind("End").Do(pm.CursorEnd)
 			km.Bind("Enter").Do(func() {
-				index, _ := pm.GetItem()
-				if index < 0 || index >= len(marks) {
-					gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, marks))
+				mk := getMarkByMarksIndex()
+				if mk == nil {
 					return
 				}
-				mark := marks[index]
-				if err := editor.OpenMarkPosition( /* editor, */ mark); err != nil {
-					gecore.Echo.AddText(err.Error())
+				if err := editor.OpenMarkPositionInCurrentBuffer(mk); err != nil {
+					gecore.Echo.AddText(err.Error()).WithStyle(gecore.EchoRed)
+				}
+				close()
+			})
+			km.Bind("Alt+Enter").Do(func() {
+				mk := getMarkByMarksIndex()
+				if mk == nil {
+					return
+				}
+				if err := editor.OpenMarkPosition(mk); err != nil {
+					gecore.Echo.AddText(err.Error()).WithStyle(gecore.EchoRed)
 				}
 				close()
 			})
