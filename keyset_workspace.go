@@ -14,6 +14,7 @@ import (
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gecore/workspace"
 	"github.com/ge-editor/keychord"
+	"github.com/ge-editor/theme"
 	"github.com/ge-editor/utils"
 )
 
@@ -239,7 +240,7 @@ func deleteRootTree(entry workspace.Entry) {
 		}
 	}
 	if err := w.RemoveRootTree(rt); err != nil {
-		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(gecore.EchoRed)
+		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(theme.ColorEchoRed)
 		return
 	}
 	gecore.Echo.AddText("RootTree " + rt.Name + " deleted from workspace " + w.Name)
@@ -357,7 +358,7 @@ func confirmDeleteWorkspace(w *workspace.Workspace) {
 func deleteWorkspace(w *workspace.Workspace) {
 	name := w.Name
 	if err := w.Close(); err != nil {
-		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(gecore.EchoRed)
+		gecore.Echo.AddText("⚠" + err.Error()).WithStyle(theme.ColorEchoRed)
 		return
 	}
 	gecore.Echo.AddText("Workspace " + name + " deleted")

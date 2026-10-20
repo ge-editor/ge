@@ -82,7 +82,7 @@ func main() {
 	gecore.InitQuitGuardManager(quit)
 
 	// First echo
-	gecore.Echo.AddText(ver()).WithStyle(gecore.EchoBlue)
+	gecore.Echo.AddText(ver())
 
 	mainLoop()
 }
@@ -235,7 +235,7 @@ func event(tev tcell.Event) {
 		// treesitter debug
 		if marker, ok := ev.Data().(string); ok && marker == "ge-syntax-update" {
 			// gelog.Debug("ge-syntax-update")
-			// gecore.Echo.AddText("ge-syntax-update")
+			gecore.Echo.AddText("ge-syntax-update")
 			return
 		}
 

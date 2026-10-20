@@ -20,6 +20,7 @@ import (
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/keychord"
+	"github.com/ge-editor/theme"
 	"github.com/ge-editor/utils"
 )
 
@@ -194,7 +195,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		getMarkByMarksIndex := func() *mark.Mark {
 			index, _ := pm.GetItem()
 			if index < 0 || index >= len(marks) {
-				gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, marks)).WithStyle(gecore.EchoRed)
+				gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, marks)).WithStyle(theme.ColorEchoRed)
 				return nil
 			}
 			return /* mark := */ marks[index]
@@ -213,7 +214,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					return
 				}
 				if err := editor.OpenMarkPositionInCurrentBuffer(mk); err != nil {
-					gecore.Echo.AddText(err.Error()).WithStyle(gecore.EchoRed)
+					gecore.Echo.AddText(err.Error()).WithStyle(theme.ColorEchoRed)
 				}
 				close()
 			})
@@ -223,7 +224,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 					return
 				}
 				if err := editor.OpenMarkPosition(mk); err != nil {
-					gecore.Echo.AddText(err.Error()).WithStyle(gecore.EchoRed)
+					gecore.Echo.AddText(err.Error()).WithStyle(theme.ColorEchoRed)
 				}
 				close()
 			})
@@ -388,6 +389,20 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		mb.SetString(currentPath) // Initial minibuffer content
 		mb.Editor().MoveCursorEndOfFile()
 	})
+
+	// 表示の際の目安はこのあたりにしようと思う:
+	//
+	// 1. コードファイルのファイル名の長さ
+	// - 8〜15文字 程度（拡張子込み）
+	//
+	// 2. コードファイルの親ディレクトリー名の長さ
+	// - 4〜12文字 程度
+	//
+	// 3. コードの行数（1ファイルあたり）
+	// - 40〜300行 程度
+	//
+	// 4. Label
+	// -
 
 	// --------------------------------------------------
 	// Open file / Find file
