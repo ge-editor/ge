@@ -5,6 +5,8 @@
 ## Recent Work
 
 - Preserve workspace context and adjust marks on edits.
+- Added extended commands for changing the buffer language and running shell commands on text or regions.
+- Read piped or redirected standard input into an initial `*stdin*` buffer.
 - Added functionality to manage the Workspace and Root Tree.
 - Fix(Popupmenu) slider position mapping, supports column title display.
 - Fix(Tree-sitter markdown): replace parser after cancelled parse.
@@ -119,6 +121,42 @@ After installing ge, you can start it by running the ge command in your terminal
 ```bash
 ./ge <text file>
 ```
+
+When no file is given, `ge` reads piped or redirected standard input into a
+`*stdin*` buffer. Pass `-` to read standard input explicitly, including when
+file paths are also given:
+
+```bash
+cat notes.txt | ge
+ge < notes.txt
+cat notes.txt | ge - other.txt
+```
+
+Use `+LINE` or `+LINE:COLUMN` before a file to start the cursor at that
+position. Lines and columns are 1-based; columns count characters. The
+position is clamped to the file's contents. A trailing position applies to
+the standard input buffer:
+
+```bash
+ge +12:4 main.go
+cat notes.txt | ge +8
+ge +20 -
+```
+
+### Extended commands
+
+Use `ESC-x` to run an extended command. Type a command name and press Enter;
+commands with completions show matching choices as you type.
+
+| Command | Function |
+|---------|----------|
+| `language NAME` (aliases: `lang`, `set-language`) | Set the active buffer's language mode. Press Enter after `language` to browse available modes, or type a mode name. |
+| `! COMMAND` | Run a shell command and insert its standard output at the cursor. |
+| `| COMMAND` | Send the region between the mark and cursor to a shell command and replace the region with its standard output. |
+
+For example, select a region by setting the mark with `C-space` and moving the
+cursor, then run `ESC-x | sort -u`. A failed command or a successful command
+with no output leaves the region unchanged.
 
 ---
 

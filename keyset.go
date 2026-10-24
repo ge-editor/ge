@@ -1,22 +1,15 @@
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/gdamore/tcell/v3"
 
-	"github.com/ge-editor/editorleaf"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/excommand"
-	"github.com/ge-editor/gecore/manager"
 	"github.com/ge-editor/gecore/mode"
 	"github.com/ge-editor/gecore/modes"
 	"github.com/ge-editor/gecore/overlay"
-	"github.com/ge-editor/gecore/popupmenu"
 	"github.com/ge-editor/gecore/screen"
 	"github.com/ge-editor/gecore/tree"
-	"github.com/ge-editor/gelog"
 	"github.com/ge-editor/keychord"
 )
 
@@ -98,117 +91,7 @@ func init() {
 	// ----------------------------
 	// Execute extended command
 	// ----------------------------
-	rootKey.Bind("Esc", "x").Do(func() {
-		target := tree.GetActiveTree()
-		if target == nil {
-			return
-		}
-
-		// Minibuffer
-		mb := editorleaf.MinibufferManager()
-		if mb.IsActive() {
-			return
-		}
-		// Popupmenu
-		pm := manager.NewPopupmenuManager()
-
-		close := func() {
-			mb.Close()
-			pm.Close()
-		}
-
-		var cmd excommand.ExCommand = nil
-		var candy []excommand.Candidate
-
-		updateItems := func(filter string) []string {
-			candy = excommand.Complete(commandsForTree(target), filter)
-
-			items := []string{}
-			for _, buff := range candy {
-				items = append(items, buff.Value+" ("+buff.Command.Description()+")")
-			}
-			if len(items) == 1 {
-				if filter == candy[0].Value {
-					items = []string{}
-				}
-			}
-			return items
-		}
-
-		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
-			km.Bind("Ctrl+N").Do(pm.CursorForward)
-			km.Bind("Down").Do(pm.CursorForward)
-			km.Bind("Ctrl+P").Do(pm.CursorBackward)
-			km.Bind("Up").Do(pm.CursorBackward)
-			km.Bind("Home").Do(pm.CursorHome)
-			km.Bind("End").Do(pm.CursorEnd)
-			// km.Bind("Enter").Do(func() {})
-		}
-
-		// ここでは bindPmKeymap は bind せずに nil にしておく
-		// miniBuffer のキーマップの中で bind する
-		pmSession := popupmenu.NewSession([]string{}, nil)
-		pm.Start(pmSession)
-
-		mbSession := editorleaf.NewSession("ESC-X: ", func(km *keychord.RootNode, miniEditor *editorleaf.Editorleaf) {
-			bytes, _, _ := mb.GetBytes()
-			text := string(bytes)
-			pm.SetItems(updateItems(text)) // here, need first layout drawing.
-
-			KeysetMinibufferCommon(km, miniEditor)
-			bindPmKeymap(km, pm.Popupmenu())
-
-			// このセッション専用のキーをマッピングする
-			km.Bind("Enter").Do(func() {
-				gecore.Echo.AddText("OK")
-
-				index, _ := pm.GetItem()
-				if index < 0 || index >= len(candy) {
-					if cmd == nil {
-						gecore.Echo.AddText(fmt.Sprintf("Out of []Candidate index: %d, candy: %v", index, candy))
-						return
-					}
-				} else {
-					cmd = candy[index].Command
-					return
-				}
-
-				gecore.Echo.AddText("Run: " + cmd.Name())
-				bytes, _, _ := mb.GetBytes()
-				// fields := strings.Fields(string(bytes))
-				// shlex を使うとクォートやエスケープが考慮される
-				/*
-					fields, err := shlex.Split(string(bytes))
-					if err != nil {
-						gecore.Echo.AddText(err.Error())
-						return
-					}
-					gelog.Debug("shlex.Split", "fields", fields)
-				*/
-
-				// 入力をそのまま渡す
-				fields := []string{string(bytes)}
-				if len(fields) == 0 || cmd == nil {
-					gecore.Echo.AddText("return: " + cmd.Name())
-					return
-				}
-
-				ctx := context.Background()
-				// handled, err := cmd.Execute(ctx, fields[1:])
-				handled, err := cmd.Execute(ctx, fields)
-				gelog.Debug("ESC-X", "handle", handled, "err", err)
-				cmd = nil
-				close()
-			}) // Enter
-		})
-		mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
-			bytes, _, _ := mb.GetBytes()
-			text := string(bytes)
-			pm.SetItems(updateItems(text))
-		})
-
-		mb.SetBytes([]byte{}) // Clear minibuffer content
-	})
+	rootKey.Bind("Esc", "x").Do(executeExtendedCommand)
 
 	// -------------------
 	// Keyboard macro
@@ -255,7 +138,18 @@ func init() {
 	})
 
 	// Operation mode
-	rootKey.Bind("Ctrl+X", "o").Do(tree.GetActiveTree().NextInCycle)
+	rootKey.Bind("Ctrl+X", "o").Do(func() {
+		tr := tree.GetActiveTree()
+		isMaximized := tr.IsMaximized()
+		if isMaximized {
+			tr.RestoreSplits()
+		}
+		tree.GetActiveTree().NextInCycle()
+		if isMaximized {
+			tr.MaximizeActive(0.90)
+		}
+	})
+
 	leafOpModeFactory := func() mode.Mode {
 		return modes.NewLeafOpMode(modeManager, `1234567890acdefgijmnopquwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`, func(root *keychord.RootNode, vm *modes.LeafOpMode) {
 			root.Bind("h").Do(vm.SplitHorizontally)
