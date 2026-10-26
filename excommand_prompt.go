@@ -97,7 +97,7 @@ func executeExtendedCommand() {
 		pm.SetItems(prompt.Update(input())) // here, need first layout drawing.
 
 		KeysetMinibufferCommon(km, miniEditor)
-		bindPopupmenuKeys(km, pm.Popupmenu())
+		KeysetPopupmenuCommon(km, pm.Popupmenu())
 
 		// Keys of this session only.
 		km.Bind("Enter").Do(onEnter)
@@ -132,13 +132,4 @@ func executeExtendedCommand() {
 	})
 
 	mb.SetBytes([]byte{}) // Clear minibuffer content
-}
-
-func bindPopupmenuKeys(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
-	km.Bind("Ctrl+N").Do(pm.CursorForward)
-	km.Bind("Down").Do(pm.CursorForward)
-	km.Bind("Ctrl+P").Do(pm.CursorBackward)
-	km.Bind("Up").Do(pm.CursorBackward)
-	km.Bind("Home").Do(pm.CursorHome)
-	km.Bind("End").Do(pm.CursorEnd)
 }

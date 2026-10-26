@@ -15,6 +15,7 @@ import (
 	"github.com/ge-editor/editorleaf/mark"
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/manager"
+	"github.com/ge-editor/gecore/marks"
 	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/popupmenu"
 	"github.com/ge-editor/gecore/tree"
@@ -163,8 +164,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 	// Mark list
 	km.Bind("Alt+u").Do(func() {
-		marks := editor.FilterByCharacters("")
-		if len(marks) == 0 {
+		mks := editor.FilterByCharacters("")
+		if len(mks) == 0 {
 			gecore.Echo.AddText("The mark is not set now")
 			return
 		}
@@ -182,10 +183,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		updateItems := func() []string {
 			bytes, _, _ := mb.GetBytes()
 			text := string(bytes)
-			marks = editor.FilterByCharacters(text)
+			mks = editor.FilterByCharacters(text)
 			items := []string{}
-			for _, m := range marks {
-				// items = append(items, fmt.Sprintf("%s %s", m.EditBuffer.GetBase(), m.Label))
+			for _, m := range mks {
 				items = append(items, fmt.Sprintf("%s %s", filepath.Base(m.FilePath), m.Label))
 			}
 			pm.SetItems(items)
@@ -194,22 +194,48 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 
 		getMarkByMarksIndex := func() *mark.Mark {
 			index, _ := pm.GetItem()
-			if index < 0 || index >= len(marks) {
-				gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, marks)).WithStyle(theme.ColorEchoRed)
+			if index < 0 || index >= len(mks) {
+				gecore.Echo.AddText(fmt.Sprintf("Out of index: %d, %v", index, mks)).WithStyle(theme.ColorEchoRed)
 				return nil
 			}
-			return /* mark := */ marks[index]
+			return mks[index]
 		}
 
-		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
-			km.Bind("Ctrl+N").Do(pm.CursorForward)
-			km.Bind("Down").Do(pm.CursorForward)
-			km.Bind("Ctrl+P").Do(pm.CursorBackward)
-			km.Bind("Up").Do(pm.CursorBackward)
-			km.Bind("Home").Do(pm.CursorHome)
-			km.Bind("End").Do(pm.CursorEnd)
-			km.Bind("Enter").Do(func() {
+		resolveMark := func(mk *mark.Mark) *mark.Mark {
+			if mk == nil {
+				return nil
+			}
+			_, err := os.Stat(mk.FilePath)
+			if err != nil {
+				marks.Marks.Remove(mk)
+				updateItems()
+
+				if os.IsNotExist(err) {
+					gecore.Echo.AddText(
+						fmt.Sprintf("Mark file not found: %s", mk.FilePath),
+					).WithStyle(theme.ColorEchoRed)
+				} else {
+					gecore.Echo.AddText(
+						fmt.Sprintf("Cannot access mark file %s: %v", mk.FilePath, err),
+					).WithStyle(theme.ColorEchoRed)
+				}
+				return nil
+			}
+			return mk
+		}
+
+		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
+			KeysetPopupmenuCommon(km, pm.Popupmenu())
+			km.Bind("Delete").Do(func() {
 				mk := getMarkByMarksIndex()
+				if mk == nil {
+					return
+				}
+				marks.Marks.Remove(mk)
+				updateItems()
+			})
+			km.Bind("Enter").Do(func() {
+				mk := resolveMark(getMarkByMarksIndex())
 				if mk == nil {
 					return
 				}
@@ -219,7 +245,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				close()
 			})
 			km.Bind("Alt+Enter").Do(func() {
-				mk := getMarkByMarksIndex()
+				mk := resolveMark(getMarkByMarksIndex())
 				if mk == nil {
 					return
 				}
@@ -241,7 +267,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				pm.SetItems(updateItems()) // here, need first layout drawing.
 
 				KeysetMinibufferCommon(km, miniEditor)
-				bindPmKeymap(km, pm.Popupmenu())
+				bindPmKeymap(km, pm)
 			})
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 				updateItems()
@@ -281,13 +307,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			return items
 		}
 
-		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
-			km.Bind("Ctrl+N").Do(pm.CursorForward)
-			km.Bind("Down").Do(pm.CursorForward)
-			km.Bind("Ctrl+P").Do(pm.CursorBackward)
-			km.Bind("Up").Do(pm.CursorBackward)
-			km.Bind("Home").Do(pm.CursorHome)
-			km.Bind("End").Do(pm.CursorEnd)
+		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
+			KeysetPopupmenuCommon(km, pm.Popupmenu())
 			km.Bind("Enter").Do(func() {
 				index, _ := pm.GetItem()
 				if index < 0 || index >= len(*buffers) {
@@ -312,7 +333,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				pm.SetItems(updateItems(text)) // here, need first layout drawing.
 
 				KeysetMinibufferCommon(km, miniEditor)
-				bindPmKeymap(km, pm.Popupmenu())
+				bindPmKeymap(km, pm)
 			})
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 				bytes, _, _ := mb.GetBytes()
@@ -457,13 +478,8 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 			buffers = utils.Dirwalk2(path)
 		}
 
-		bindPmKeymap := func(km *keychord.RootNode, pm *popupmenu.PopupmenuStruct) {
-			km.Bind("Ctrl+N").Do(pm.CursorForward)
-			km.Bind("Down").Do(pm.CursorForward)
-			km.Bind("Ctrl+P").Do(pm.CursorBackward)
-			km.Bind("Up").Do(pm.CursorBackward)
-			km.Bind("Home").Do(pm.CursorHome)
-			km.Bind("End").Do(pm.CursorEnd)
+		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
+			KeysetPopupmenuCommon(km, pm.Popupmenu())
 			km.Bind("Esc").Do(func() {
 				pm.Active(false)
 			})
@@ -562,7 +578,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				updateItems("")
 
 				KeysetMinibufferCommon(km, miniEditor)
-				bindPmKeymap(km, pm.Popupmenu())
+				bindPmKeymap(km, pm)
 			})
 			mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 				bytes, _, _ := mb.GetBytes()

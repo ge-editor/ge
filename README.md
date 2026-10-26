@@ -5,16 +5,9 @@
 ## Recent Work
 
 - Preserve workspace context and adjust marks on edits.
-- Added extended commands for changing the buffer language and running shell commands on text or regions.
-- Read piped or redirected standard input into an initial `*stdin*` buffer.
 - Added functionality to manage the Workspace and Root Tree.
-- Fix(Popupmenu) slider position mapping, supports column title display.
-- Fix(Tree-sitter markdown): replace parser after cancelled parse.
-- **Execute extended command** is being worked.
-- **Tree-sitter** is being worked.
-- Fix split-screen operations in mode handling.
-- **Search** is being reworked.
-- Introduced **deploysession**, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
+- Search is being reworked.
+- Introduced deploysession, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
 
 ## Features
 
@@ -171,9 +164,9 @@ with no output leaves the region unchanged.
 | C-x C-w             | Save file as [prompt maybe]
 | C-x C-f             | Open file
 | C-x p               | Switch workspace / RootTree
-| M-g                 | Go to line [prompt]
+| M-g (Alt+g)         | Go to line [prompt]
 | C-/                 | Undo
-| C-x / (/...)        | Redo
+| C-x /               | Enter redo mode; press / to repeat redo, C-g to exit
 
 ### View/buffer operations:
 |  key                |  function                             |
@@ -246,13 +239,11 @@ with no output leaves the region unchanged.
 ### Search and replace operations:
 |  key                |  function                             |
 |---------------------|---------------------------------------|
-| C-s, C-r            | Into Search and replace mode [interactive prompt]
-| ~~C-r~~             | ~~Search and replace backward, into search and replace mode [interactive prompt]~~
-| C-s                 | Move to forward matched word
-| C-r                 | Move to backward matched word
-| C-e                 | Replace on cursor
+| C-s                 | Open search prompt [interactive; searches as you type]
+| C-s                 | Move to next matched word (while search prompt is active)
+| C-r                 | Move to previous matched word (while search prompt is active)
 | ~~C-a~~             | ~~Replace All~~
-| C-y                 | Yank and replace on minibuffer from kill buffer
+| C-y                 | Yank (paste) from kill buffer
 
 ### Mark and region operations:
 |  key                |  function                             |
@@ -277,7 +268,6 @@ with no output leaves the region unchanged.
 | M-p                 | Command palette
 | [F2]                | ~~Refactoring~~
 | [F4]                | ~~case...~~
-| ~~M-u~~             | ~~Convert the following word to upper case~~
 | ~~M-l~~             | ~~Convert the following word to lower case~~
 | ~~M-c~~             | ~~Capitalize the following word~~
 | ~~M-/~~             | ~~Local words autocompletion~~

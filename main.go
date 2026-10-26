@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -34,7 +35,7 @@ var (
 )
 
 func ver() string {
-	v := "ge v0.1.16-dev"
+	v := "ge v0.1.17-dev"
 	w := ""
 	if buildTime != "" {
 		w = fmt.Sprintf(" - build %s", buildTime)
@@ -51,6 +52,8 @@ func ver() string {
 }
 
 func main() {
+	gelog.Debug("--- Start ge ---")
+
 	Screen = screen.Get()
 	defer func() {
 		Screen.Clear()
@@ -109,6 +112,14 @@ func requestDraw() {
 	}
 }
 
+var uiMu sync.Mutex
+
+func eventLocked(tev tcell.Event) {
+	uiMu.Lock()
+	defer uiMu.Unlock()
+	event(tev)
+}
+
 // drawLoop は描画専用の goroutine。draw は常にこの1本でしか走らない。
 func drawLoop(stop <-chan struct{}, done chan<- struct{}) {
 	defer close(done)
@@ -125,13 +136,18 @@ func drawLoop(stop <-chan struct{}, done chan<- struct{}) {
 			continue
 		}
 
+		uiMu.Lock()
 		if !draw(box.ctx) {
 			Screen.Show()
 		}
-
 		// Restore the editor's default foreground and background colors
 		// for IME preedit rendering.
 		theme.RestoreTerminalAttributes()
+		uiMu.Unlock()
+
+		// Restore the editor's default foreground and background colors
+		// for IME preedit rendering.
+		// theme.RestoreTerminalAttributes()
 	}
 }
 
@@ -151,7 +167,7 @@ func mainLoop() {
 	}()
 
 	for tev := range tcellEvent {
-		event(tev)
+		eventLocked(tev)
 		if consumeMoreEvents() {
 			break // quit ge-editor
 		}
@@ -179,7 +195,7 @@ func consumeMoreEvents() bool {
 	for {
 		select {
 		case ev := <-tcellEvent:
-			event(ev)
+			eventLocked(ev)
 			if !timer.Stop() {
 				select {
 				case <-timer.C:

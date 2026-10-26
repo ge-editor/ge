@@ -34,32 +34,23 @@ func KeysetEditorleafCommon(editorKey *keychord.RootNode, editor *editorleaf.Edi
 	// Redo Mode
 	redoModeFactory := func() mode.Mode {
 		return modes.NewRedoMode(modeManager, func(rmKey *keychord.RootNode, rm *modes.RedoMode) {
-			/*
-				rmKey.Bind("/").Do(func() {
-					if editor.IsRedoEmpty() {
-						gecore.Echo.AddText("Redo buffer is empty")
-						rm.ModeManager.Cancel()
-						return
-					}
-					editor.Redo()
-					gecore.Echo.AddText("Redo!")
-					gecore.Echo.AddText("(Type / to repeat redo)")
-				})
-			*/
 			rmKey.BindKeyEvent(func(ek tcell.EventKey) (string, keychord.KeyDispatchTransition) {
+				if shouldCancelMode(ek) {
+					gecore.Echo.AddText("Canceled")
+					rm.ModeManager.Cancel()
+					return "", keychord.DispatchExecuted
+				}
+
 				switch ek.Str() {
 				case "/":
 					if editor.IsRedoEmpty() {
-						gecore.Echo.AddText("Redo buffer is empty")
-						rm.ModeManager.Cancel()
+						gecore.Echo.AddText("Nothing to redo. Press C-g to exit redo mode.")
 						break
 					}
 					editor.Redo()
-					gecore.Echo.AddText("Redo!")
-					gecore.Echo.AddText("(Type / to repeat redo)")
+					gecore.Echo.AddText("Redo! Type / to repeat redo.")
 				default:
-					rm.ModeManager.Cancel()
-					gecore.Echo.AddText("Exited redo mode")
+					gecore.Echo.AddText("Redo mode: press / to redo, C-g to exit.")
 				}
 				return "", keychord.DispatchExecuted
 			})

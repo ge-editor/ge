@@ -68,18 +68,8 @@ func switchWorkspaceMenu() {
 		}
 	}
 
-	bindPmKeymap := func(km *keychord.RootNode, p *popupmenu.PopupmenuStruct) {
-		backward := func() {
-			if i, _ := p.GetItem(); i > 0 {
-				p.CursorBackward()
-			}
-		}
-		km.Bind("Ctrl+N").Do(p.CursorForward)
-		km.Bind("Down").Do(p.CursorForward)
-		km.Bind("Ctrl+P").Do(backward)
-		km.Bind("Up").Do(backward)
-		km.Bind("Home").Do(p.CursorHome)
-		km.Bind("End").Do(p.CursorEnd)
+	bindPmKeymap := func(km *keychord.RootNode, p *manager.PopupmenuManagerStruct) {
+		KeysetPopupmenuCommon(km, pm.Popupmenu())
 		km.Bind("Alt+Insert").Do(func() {
 			closeMenu()
 			newWorkspacePrompt()
@@ -142,7 +132,7 @@ func switchWorkspaceMenu() {
 		updateItems("") // here, need first layout drawing.
 
 		KeysetMinibufferCommon(km, miniEditor)
-		bindPmKeymap(km, pm.Popupmenu())
+		bindPmKeymap(km, pm)
 	})
 	mb.Start(mbSession, func(result keychord.KeyDispatchTransition) {
 		bytes, _, _ := mb.GetBytes()

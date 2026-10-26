@@ -182,3 +182,19 @@ func init() {
 	})
 
 }
+
+func shouldCancelMode(ek tcell.EventKey) bool {
+	if ek.Modifiers() != tcell.ModNone {
+		return true
+	}
+
+	switch ek.Key() {
+	case tcell.KeyUp,
+		tcell.KeyDown,
+		tcell.KeyLeft,
+		tcell.KeyRight:
+		return true
+	}
+
+	return false
+}
