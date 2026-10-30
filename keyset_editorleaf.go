@@ -243,9 +243,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				}
 				close()
 			})
-			// km.Bind("Alt+Enter").Do(func() {
-			// km.Bind("Shift+Enter").Do(func() {
-			km.Bind("Alt+p").Do(func() {
+			km.Bind("Alt+Enter").Do(func() {
 				mk := resolveMark(getMarkByMarksIndex())
 				if mk == nil {
 					return
