@@ -58,6 +58,7 @@ func onKeyStatus(l gecore.KeyLayer, status string, res keychord.KeyDispatchTrans
 //	 0  cancel      Ctrl+G cancellation
 //	10  macro       keyboard macro commands and replay
 //	20  global      keys independent of the current mode
+//	25  popupmenu   popupmenu navigation keys, only while a popupmenu is shown
 //	30  minibuffer  minibuffer input while active
 //	40  mode        root and pushed key modes
 //	50  leaf        active leaf's default key handling
@@ -74,6 +75,7 @@ func initKeyLayers() {
 	m.Register(&cancelKeyOnlyLayer{km: cancelKeyOnly})
 	m.Register(&macroLayer{mm: macroModeManager, macro: macroMode})
 	m.Register(&globalKeyLayer{km: globalKey})
+	m.Register(&popupmenuLayer{km: popupmenuKey})
 	m.Register(&minibufferLayer{})
 	m.Register(&modeLayer{mm: modeManager})
 	m.Register(&leafLayer{})
@@ -142,7 +144,19 @@ func (l *globalKeyLayer) Dispatch(ev tcell.EventKey) (string, keychord.KeyDispat
 type minibufferLayer struct{}
 
 func (l *minibufferLayer) Name() string { return "minibuffer" }
-func (l *minibufferLayer) Active() bool { return true }
+
+// func (l *minibufferLayer) Active() bool { return true }
+/*
+func (l *minibufferLayer) Active() bool {
+	return !modeManager.IsInMode()
+}
+*/
+func (l *minibufferLayer) Active() bool {
+	if o, ok := modeManager.CurrentMode().(mode.InputOverMinibuffer); ok && o.OverMinibuffer() {
+		return false
+	}
+	return true
+}
 
 func (l *minibufferLayer) Exclusive() bool {
 	return editorleaf.MinibufferManager().IsActive()

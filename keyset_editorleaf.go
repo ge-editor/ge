@@ -16,7 +16,6 @@ import (
 	"github.com/ge-editor/gecore"
 	"github.com/ge-editor/gecore/manager"
 	"github.com/ge-editor/gecore/marks"
-	"github.com/ge-editor/gecore/overlay"
 	"github.com/ge-editor/gecore/popupmenu"
 	"github.com/ge-editor/gecore/tree"
 	"github.com/ge-editor/gelog"
@@ -225,7 +224,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		}
 
 		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
-			KeysetPopupmenuCommon(km, pm.Popupmenu())
+			// KeysetPopupmenuCommon(km, pm.Popupmenu())
 			km.Bind("Delete").Do(func() {
 				mk := getMarkByMarksIndex()
 				if mk == nil {
@@ -244,7 +243,9 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				}
 				close()
 			})
-			km.Bind("Alt+Enter").Do(func() {
+			// km.Bind("Alt+Enter").Do(func() {
+			// km.Bind("Shift+Enter").Do(func() {
+			km.Bind("Alt+p").Do(func() {
 				mk := resolveMark(getMarkByMarksIndex())
 				if mk == nil {
 					return
@@ -287,7 +288,6 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		close := func() {
 			mb.Close()
 			pm.Close()
-			// overlay.OverlayManager().Remove(pm)
 		}
 
 		var buffers *buffer.BufferSets
@@ -308,7 +308,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		}
 
 		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
-			KeysetPopupmenuCommon(km, pm.Popupmenu())
+			// KeysetPopupmenuCommon(km, pm.Popupmenu())
 			km.Bind("Enter").Do(func() {
 				index, _ := pm.GetItem()
 				if index < 0 || index >= len(*buffers) {
@@ -446,7 +446,6 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		close := func() {
 			mb.Close()
 			pm.Close()
-			overlay.OverlayManager().Remove(pm)
 		}
 
 		updateItems := func(filter string) {
@@ -479,7 +478,7 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 		}
 
 		bindPmKeymap := func(km *keychord.RootNode, pm *manager.PopupmenuManagerStruct) {
-			KeysetPopupmenuCommon(km, pm.Popupmenu())
+			// KeysetPopupmenuCommon(km, pm.Popupmenu())
 			km.Bind("Esc").Do(func() {
 				pm.Active(false)
 			})

@@ -35,7 +35,7 @@ var (
 )
 
 func ver() string {
-	v := "ge v0.1.17-dev"
+	v := "ge v0.1.18-dev"
 	w := ""
 	if buildTime != "" {
 		w = fmt.Sprintf(" - build %s", buildTime)
@@ -65,7 +65,8 @@ func main() {
 	tree.SetActiveTree(tree.GetRootTree())
 
 	// The first workspace adopts the RootTree created above.
-	if _, err := workspace.InitDefault(gecore.WorkSpaces); err != nil {
+	initialWorkspace, err := workspace.InitDefault(gecore.WorkSpaces)
+	if err != nil {
 		gelog.Error(err.Error())
 	}
 
@@ -83,9 +84,17 @@ func main() {
 	initKeyLayers()
 
 	gecore.InitQuitGuardManager(quit)
+	// After the buffer guard (registered by the first editor leaf): ask for
+	// the files of the workspaces that have none.
+	gecore.QuitGuardManager.Register(newWorkspaceQuitGuard(), gecore.GuardWaitResolved)
 
 	// First echo
 	gecore.Echo.AddText(ver())
+
+	// "--work FILE" / "--default-work": load workspace files. Needs the
+	// overlay registered above (loading lays out the screen) and the Echo.
+	restoreWorkspaces(initialWorkspace)
+	startWorkspaceAutoSave(workspace.DefaultAutoSaveInterval)
 
 	mainLoop()
 }
@@ -176,6 +185,14 @@ func mainLoop() {
 }
 
 func beforeQuit() {
+	// Save every workspace one last time (after the quit guards were
+	// resolved, so the layout is the final one).
+	stopWorkspaceAutoSave()
+
+	// The files of the workspaces are final now (chosen in the quit guard and
+	// written above): bring the marks up to date, then let them be written.
+	syncMarksWithWorkspaces()
+
 	if err := state.StateSave(); err != nil {
 		gelog.Error(err.Error())
 	}

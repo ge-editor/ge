@@ -97,7 +97,6 @@ func executeExtendedCommand() {
 		pm.SetItems(prompt.Update(input())) // here, need first layout drawing.
 
 		KeysetMinibufferCommon(km, miniEditor)
-		KeysetPopupmenuCommon(km, pm.Popupmenu())
 
 		// Keys of this session only.
 		km.Bind("Enter").Do(onEnter)

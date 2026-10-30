@@ -69,7 +69,7 @@ func switchWorkspaceMenu() {
 	}
 
 	bindPmKeymap := func(km *keychord.RootNode, p *manager.PopupmenuManagerStruct) {
-		KeysetPopupmenuCommon(km, pm.Popupmenu())
+		// KeysetPopupmenuCommon(km, pm.Popupmenu())
 		km.Bind("Alt+Insert").Do(func() {
 			closeMenu()
 			newWorkspacePrompt()

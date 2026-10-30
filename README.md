@@ -4,10 +4,12 @@
 
 ## Recent Work
 
-- Preserve workspace context and adjust marks on edits.
-- Added functionality to manage the Workspace and Root Tree.
-- Search is being reworked.
-- Introduced deploysession, a tool for managing deployment sessions and dependencies. The git history got a little messy during the process.
+- Save and restore per-file cursor positions when buffers are closed and reopened.
+- Save and restore workspaces, including their RootTree layout and each view's
+  file and cursor position.
+- Preserve workspace context for marks and adjust mark positions as files are
+  edited.
+- Added commands to save and rename workspaces and RootTrees.
 
 ## Features
 
@@ -135,6 +137,61 @@ ge +12:4 main.go
 cat notes.txt | ge +8
 ge +20 -
 ```
+
+### Workspace files
+
+A workspace (its folders and the layout of each RootTree: splits, the file and
+cursor position of each window) can be saved in a workspace file. By
+convention its extension is `.ge-workspace`.
+
+```bash
+ge --work project.ge-workspace            # load a workspace file (repeatable)
+ge --default-work                         # restore the default workspace
+```
+
+- `--work FILE` (or `--work=FILE`) loads FILE. With several `--work` options,
+  the first one is displayed.
+- Every workspace is saved automatically: ge checks them every 5 seconds,
+  writes only the files of workspaces that changed, and saves once more when
+  quitting. A workspace loaded with `--work` is saved back to its file.
+- The default workspace is saved to `default.ge-workspace` in the state
+  directory (`~/.local/state/ge/` on Linux, next to `marks.json`). Without
+  `--default-work` the saved file is not read, but a normal start still
+  replaces it, so `--default-work` restores the last session.
+- A workspace created in the switch menu has no file yet. It is saved to
+  `workspaces/<name>.ge-workspace` in the state directory (the name is URL
+  escaped). When quitting, ge asks for the file of every workspace whose file
+  was not chosen, like `C-x C-w` does for a buffer; empty input keeps the
+  state directory file. `.ge-workspace` is appended when the name does not
+  end with it (also for `--work`).
+
+Names:
+
+- A workspace and one of its RootTrees are written
+  `workspace-name.roottreename`. Neither name may contain a `.`.
+- Two workspaces may have the same name only when both have a file and the
+  files differ. A RootTree name must be unique within its workspace.
+
+ESC x commands:
+
+- `workspace-save [FILE]` saves the current workspace, to FILE if given (an
+  existing file is only overwritten after a y/n). Without FILE it saves to the
+  file of the workspace; if none was chosen yet it asks for one.
+- `workspace-rename [TARGET] [NEWNAME]` renames a workspace (`TARGET` is
+  `workspace-name`) or a RootTree (`workspace-name.roottreename`). Without
+  NEWNAME it asks for it, starting from the old name. Without TARGET it
+  renames the current workspace. When several workspaces have the name, the
+  current one is used.
+- Files given on the command line are not part of the restored layout: the
+  first one is opened in the active window.
+
+### Cursor positions
+
+For regular files, ge saves the cursor position when a buffer is closed and
+restores it when the file is opened again. When a workspace is restored, its
+saved cursor positions take precedence for files in its layout. A `+LINE` or
+`+LINE:COLUMN` command-line position sets the starting position for the file
+opened from that command-line argument.
 
 ### Extended commands
 

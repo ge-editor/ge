@@ -46,7 +46,18 @@ func init() {
 
 		// Modes
 		// modeManager.Cancel()
-		modeManager.CancelAll()
+		// modeManager.CancelAll()
+		/* if modeManager.IsInMode() {
+			modeManager.Cancel()
+		} else {
+			modeManager.CancelAll()
+		} */
+		if o, ok := modeManager.CurrentMode().(mode.InputOverMinibuffer); ok && o.OverMinibuffer() {
+			modeManager.Cancel()
+			return
+		} else {
+			modeManager.CancelAll()
+		}
 
 		// gecore.CancelManager().CancelTop()
 		gecore.CancelManager().CancelAll()
@@ -124,17 +135,28 @@ func init() {
 	})
 	// Split active view vertically
 	rootKey.Bind("Ctrl+X", "2").Do(func() {
-		top, _ := tree.GetActiveTree().InsertBottom(tree.GetActiveTree())
-		tree.SetActiveTree(top)
+		// top, _ := tree.GetActiveTree().InsertBottom(tree.GetActiveTree())
+		// tree.SetActiveTree(top)
+		tree.GetActiveTree().InsertBottom(tree.GetActiveTree())
 	})
 	// Split active view horizontally
 	rootKey.Bind("Ctrl+X", "5").Do(func() {
-		left, _ := tree.GetActiveTree().InsertRight(tree.GetActiveTree())
-		tree.SetActiveTree(left)
+		// left, _ := tree.GetActiveTree().InsertRight(tree.GetActiveTree())
+		// tree.SetActiveTree(left)
+		tree.GetActiveTree().InsertRight(tree.GetActiveTree())
+	})
+	//
+	rootKey.Bind("Ctrl+X", "8").Do(func() {
+		tree.GetActiveTree().SwitchSplitDirection()
 	})
 	// Toggle maximize active view
 	rootKey.Bind("Ctrl+X", "9").Do(func() {
-		tree.GetActiveTree().ToggleMaximizeActive(0.90)
+		width, _ := screen.Get().Size()
+		w := min(float32(width)*0.90, 128)
+		r := w / float32(width)
+		// r := float32(w) / float32(width)
+		tree.GetActiveTree().ToggleMaximizeActive(r)
+		// tree.GetActiveTree().ToggleMaximizeActive(0.90)
 	})
 
 	// Operation mode
