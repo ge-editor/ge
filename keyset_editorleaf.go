@@ -205,6 +205,10 @@ func KeysetEditorleaf(km *keychord.RootNode, editor *editorleaf.Editorleaf) {
 				return nil
 			}
 			_, err := os.Stat(mk.FilePath)
+			if os.IsNotExist(err) && editorleaf.BufferSets.Contains(mk.FilePath) {
+				// A file that is open but not saved yet has no file on disk.
+				return mk
+			}
 			if err != nil {
 				marks.Marks.Remove(mk)
 				updateItems()
