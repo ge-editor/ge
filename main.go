@@ -35,7 +35,7 @@ var (
 )
 
 func ver() string {
-	v := "ge v0.1.18-dev"
+	v := "ge v0.1.19-dev"
 	w := ""
 	if buildTime != "" {
 		w = fmt.Sprintf(" - build %s", buildTime)
